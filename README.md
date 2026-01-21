@@ -5,11 +5,21 @@
 <img src="doc/icon.png" style="height:96px; width:96px;"/>
 
 **A Schema.org Multitool**
+
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Repo](https://img.shields.io/badge/github-repo-blue.svg)](https://github.com/Aloecraft-org/AloeSchema)
+
+
 </div>
 
 ## Getting Started
 
 See **quickstart.ipynb** for more detailed usage examples
+
+**Installation**:
+```sh
+pip install aloeschema
+```
 
 **Initialization**: Loads schema.org and a validator
 
