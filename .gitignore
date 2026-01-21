@@ -1,0 +1,5 @@
+.vscode
+aloe_schema.egg-info
+aloeschema.egg-info
+dist
+*/**/__pycache__

@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name="aloeschema"
+version = "0.1.0"
+description="AloeSchema is a simple schema.org accessor and validator that allows custom types and properties"
+authors = [{email = "michael@aloecraft.org"}]
+maintainers = [{email = "michael@aloecraft.org"}]
+readme = "README.md"
+license = "apache-2.0"
+requires-python = ">=3.9"
+
+dependencies = [
+    "requests"
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=6.0",
+    "coverage",
+]
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "--verbose" # Example options for verbose output and coverage
+testpaths = [
+    "test",
+]
+python_files = "unit_tests.py" 
+# Or "*.py" if you have multiple test files
+
+[tool.setuptools]
+package-dir = { "aloeschema" = "src" }
+packages = ["aloeschema"]
