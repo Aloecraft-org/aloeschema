@@ -1,6 +1,6 @@
 # Copyright (C) Michael Godfrey 2026 | aloecraft.org <michael@aloecraft.org>
 # Licensed under the Apache License, Version 2.0.
-# 
+#
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -8,9 +8,9 @@
 # to you under the Apache License, Version 2.0 (the
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing,
 # software distributed under the License is distributed on an
 # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -20,6 +20,7 @@
 
 from aloeschema.constant import AloeSchemaErrorType
 
+
 class AloeSchemaError(BaseException):
     def __init__(self, error_type: AloeSchemaErrorType, message: str = None):
         self.error_type = error_type  # renamed for clarity
@@ -27,4 +28,4 @@ class AloeSchemaError(BaseException):
         super().__init__(self.message)
 
     def __str__(self):
-        return f"{f"{self.message} " if self.message else ""}(Error Code: {self.error_type})"
+        return f"{f'{self.message} ' if self.message else ''}(Error Code: {self.error_type})"

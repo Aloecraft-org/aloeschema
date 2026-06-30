@@ -1,6 +1,6 @@
 # Copyright (C) Michael Godfrey 2026 | aloecraft.org <michael@aloecraft.org>
 # Licensed under the Apache License, Version 2.0.
-# 
+#
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -8,9 +8,9 @@
 # to you under the Apache License, Version 2.0 (the
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing,
 # software distributed under the License is distributed on an
 # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -20,14 +20,18 @@
 from aloeschema.constant import AloeSchemaErrorType
 from aloeschema.error import AloeSchemaError
 
-class AloeSchemaValidator:
 
+class AloeSchemaValidator:
     def __init__(self, schema_org):
         self.schema_org = schema_org
 
-    def _getType(self, type_name:str, ignore_case=True):
+    def _getType(self, type_name: str, ignore_case=True):
         if ignore_case:
-            type_list = [v for k,v in self.schema_org["types"].items() if k.lower() == type_name.lower()]
+            type_list = [
+                v
+                for k, v in self.schema_org["types"].items()
+                if k.lower() == type_name.lower()
+            ]
             if type_list:
                 return type_list[0]
             else:
@@ -35,9 +39,13 @@ class AloeSchemaValidator:
         else:
             return self.schema_org["types"].get(type_name, None)
 
-    def _getProperty(self, property_name:str, ignore_case=True):
+    def _getProperty(self, property_name: str, ignore_case=True):
         if ignore_case:
-            property_list = [v for k,v in self.schema_org["properties"].items() if k.lower() == property_name.lower()]
+            property_list = [
+                v
+                for k, v in self.schema_org["properties"].items()
+                if k.lower() == property_name.lower()
+            ]
             if property_list:
                 return property_list[0]
             else:
@@ -46,11 +54,17 @@ class AloeSchemaValidator:
             return self.schema_org["properties"].get(property_name, None)
 
     def _item_in(self, item, collection, ignore_case=True):
-        return (item.lower() if ignore_case else item) in [c.lower() if ignore_case else c for c in collection]
-    
+        return (item.lower() if ignore_case else item) in [
+            c.lower() if ignore_case else c for c in collection
+        ]
+
     def _getEnumerationValue(self, value_name: str, ignore_case=True):
         if ignore_case:
-            matches = [v for k, v in self.schema_org["enumerations"].items() if k.lower() == value_name.lower()]
+            matches = [
+                v
+                for k, v in self.schema_org["enumerations"].items()
+                if k.lower() == value_name.lower()
+            ]
             return matches[0] if matches else None
         return self.schema_org["enumerations"].get(value_name, None)
 
@@ -61,18 +75,24 @@ class AloeSchemaValidator:
     def IsValidEnumerationValue(self, value_name: str, ignore_case=True) -> bool:
         return self._getEnumerationValue(value_name, ignore_case) is not None
 
-    def EnumerationValueIsOfType(self, enum_type_name: str, value_name: str, ignore_case=True, quiet=False) -> bool:
+    def EnumerationValueIsOfType(
+        self, enum_type_name: str, value_name: str, ignore_case=True, quiet=False
+    ) -> bool:
         if not self.IsEnumerationType(enum_type_name, ignore_case):
             if quiet:
                 return False
-            raise AloeSchemaError(AloeSchemaErrorType.ENUMERATION_TYPE_NOT_RECOGNIZED,
-                f"Enumeration type<{enum_type_name}> is not a recognized enumeration type")
+            raise AloeSchemaError(
+                AloeSchemaErrorType.ENUMERATION_TYPE_NOT_RECOGNIZED,
+                f"Enumeration type<{enum_type_name}> is not a recognized enumeration type",
+            )
         entry = self._getEnumerationValue(value_name, ignore_case)
         if entry is None:
             if quiet:
                 return False
-            raise AloeSchemaError(AloeSchemaErrorType.ENUMERATION_VALUE_NOT_RECOGNIZED,
-                f"Enumeration value<{value_name}> is not a recognized enumeration value")
+            raise AloeSchemaError(
+                AloeSchemaErrorType.ENUMERATION_VALUE_NOT_RECOGNIZED,
+                f"Enumeration value<{value_name}> is not a recognized enumeration value",
+            )
         stored_type = entry["enum_type"]
         if ignore_case:
             return stored_type.lower() == enum_type_name.lower()
@@ -80,7 +100,11 @@ class AloeSchemaValidator:
 
     def _getEnumerationValue(self, value_name: str, ignore_case=True):
         if ignore_case:
-            matches = [v for k, v in self.schema_org["enumerations"].items() if k.lower() == value_name.lower()]
+            matches = [
+                v
+                for k, v in self.schema_org["enumerations"].items()
+                if k.lower() == value_name.lower()
+            ]
             return matches[0] if matches else None
         return self.schema_org["enumerations"].get(value_name, None)
 
@@ -91,18 +115,24 @@ class AloeSchemaValidator:
     def IsValidEnumerationValue(self, value_name: str, ignore_case=True) -> bool:
         return self._getEnumerationValue(value_name, ignore_case) is not None
 
-    def EnumerationValueIsOfType(self, enum_type_name: str, value_name: str, ignore_case=True, quiet=False) -> bool:
+    def EnumerationValueIsOfType(
+        self, enum_type_name: str, value_name: str, ignore_case=True, quiet=False
+    ) -> bool:
         if not self.IsEnumerationType(enum_type_name, ignore_case):
             if quiet:
                 return False
-            raise AloeSchemaError(AloeSchemaErrorType.ENUMERATION_TYPE_NOT_RECOGNIZED,
-                f"Enumeration type<{enum_type_name}> is not a recognized enumeration type")
+            raise AloeSchemaError(
+                AloeSchemaErrorType.ENUMERATION_TYPE_NOT_RECOGNIZED,
+                f"Enumeration type<{enum_type_name}> is not a recognized enumeration type",
+            )
         entry = self._getEnumerationValue(value_name, ignore_case)
         if entry is None:
             if quiet:
                 return False
-            raise AloeSchemaError(AloeSchemaErrorType.ENUMERATION_VALUE_NOT_RECOGNIZED,
-                f"Enumeration value<{value_name}> is not a recognized enumeration value")
+            raise AloeSchemaError(
+                AloeSchemaErrorType.ENUMERATION_VALUE_NOT_RECOGNIZED,
+                f"Enumeration value<{value_name}> is not a recognized enumeration value",
+            )
         stored_type = entry["enum_type"]
         if ignore_case:
             return stored_type.lower() == enum_type_name.lower()
@@ -110,7 +140,11 @@ class AloeSchemaValidator:
 
     def _getEnumerationValue(self, value_name: str, ignore_case=True):
         if ignore_case:
-            matches = [v for k, v in self.schema_org["enumerations"].items() if k.lower() == value_name.lower()]
+            matches = [
+                v
+                for k, v in self.schema_org["enumerations"].items()
+                if k.lower() == value_name.lower()
+            ]
             return matches[0] if matches else None
         return self.schema_org["enumerations"].get(value_name, None)
 
@@ -121,115 +155,228 @@ class AloeSchemaValidator:
     def IsValidEnumerationValue(self, value_name: str, ignore_case=True) -> bool:
         return self._getEnumerationValue(value_name, ignore_case) is not None
 
-    def EnumerationValueIsOfType(self, enum_type_name: str, value_name: str, ignore_case=True, quiet=False) -> bool:
+    def EnumerationValueIsOfType(
+        self, enum_type_name: str, value_name: str, ignore_case=True, quiet=False
+    ) -> bool:
         if not self.IsEnumerationType(enum_type_name, ignore_case):
             if quiet:
                 return False
-            raise AloeSchemaError(AloeSchemaErrorType.ENUMERATION_TYPE_NOT_RECOGNIZED,
-                f"Enumeration type<{enum_type_name}> is not a recognized enumeration type")
+            raise AloeSchemaError(
+                AloeSchemaErrorType.ENUMERATION_TYPE_NOT_RECOGNIZED,
+                f"Enumeration type<{enum_type_name}> is not a recognized enumeration type",
+            )
         entry = self._getEnumerationValue(value_name, ignore_case)
         if entry is None:
             if quiet:
                 return False
-            raise AloeSchemaError(AloeSchemaErrorType.ENUMERATION_VALUE_NOT_RECOGNIZED,
-                f"Enumeration value<{value_name}> is not a recognized enumeration value")
+            raise AloeSchemaError(
+                AloeSchemaErrorType.ENUMERATION_VALUE_NOT_RECOGNIZED,
+                f"Enumeration value<{value_name}> is not a recognized enumeration value",
+            )
         stored_type = entry["enum_type"]
         if ignore_case:
             return stored_type.lower() == enum_type_name.lower()
         return stored_type == enum_type_name
 
-    def IsValidType(self, type_name:str, ignore_case=True) -> bool:
+    def IsValidType(self, type_name: str, ignore_case=True) -> bool:
         return self._getType(type_name, ignore_case)
 
-    def IsValidPropertyType(self, property_type_name:str, ignore_case=True) -> bool:
+    def IsValidPropertyType(self, property_type_name: str, ignore_case=True) -> bool:
         return self._getProperty(property_type_name, ignore_case)
 
-    def IsValidValueType(self, value_type_name:str, ignore_case=True) -> bool:
-        return self.IsValidType(value_type_name, ignore_case) and 'DataType' in self._getType(value_type_name, ignore_case).get('path', [])
+    def IsValidValueType(self, value_type_name: str, ignore_case=True) -> bool:
+        return self.IsValidType(
+            value_type_name, ignore_case
+        ) and "DataType" in self._getType(value_type_name, ignore_case).get("path", [])
 
-    def TypeDescendantOf(self, parent_type_name:str, child_type_name:str, ignore_case=True, quiet=False) -> bool:
-        if not self.IsValidType(parent_type_name,ignore_case):
+    def TypeDescendantOf(
+        self, parent_type_name: str, child_type_name: str, ignore_case=True, quiet=False
+    ) -> bool:
+        if not self.IsValidType(parent_type_name, ignore_case):
             if quiet:
                 return False
-            raise AloeSchemaError(AloeSchemaErrorType.TYPE_NOT_RECOGNIZED, f"Parent type<{parent_type_name}> not a recognized schema.org type")
+            raise AloeSchemaError(
+                AloeSchemaErrorType.TYPE_NOT_RECOGNIZED,
+                f"Parent type<{parent_type_name}> not a recognized schema.org type",
+            )
 
         if not self.IsValidType(child_type_name, ignore_case):
             if quiet:
                 return False
-            raise AloeSchemaError(AloeSchemaErrorType.TYPE_NOT_RECOGNIZED, f"Child type<{child_type_name}> not a recognized schema.org type")
+            raise AloeSchemaError(
+                AloeSchemaErrorType.TYPE_NOT_RECOGNIZED,
+                f"Child type<{child_type_name}> not a recognized schema.org type",
+            )
 
-        return self._item_in(parent_type_name,self._getType(child_type_name, ignore_case).get('path', []),ignore_case)            
-    
-    def TypeInPropertyRange(self, property_type_name:str, object_type_name:str, ignore_case=True, quiet=False) -> bool:
+        return self._item_in(
+            parent_type_name,
+            self._getType(child_type_name, ignore_case).get("path", []),
+            ignore_case,
+        )
+
+    def TypeInPropertyRange(
+        self,
+        property_type_name: str,
+        object_type_name: str,
+        ignore_case=True,
+        quiet=False,
+    ) -> bool:
         if not self.IsValidType(object_type_name, ignore_case):
             if quiet:
                 return False
-            raise AloeSchemaError(AloeSchemaErrorType.TYPE_NOT_RECOGNIZED, f"Object type<{object_type_name}> not a recognized schema.org type")
+            raise AloeSchemaError(
+                AloeSchemaErrorType.TYPE_NOT_RECOGNIZED,
+                f"Object type<{object_type_name}> not a recognized schema.org type",
+            )
         if not self.IsValidPropertyType(property_type_name, ignore_case):
             if quiet:
                 return False
-            raise AloeSchemaError(AloeSchemaErrorType.PROPERTY_TYPE_NOT_RECOGNIZED, f"Property<{property_type_name}> not a recognized schema.org property type")
+            raise AloeSchemaError(
+                AloeSchemaErrorType.PROPERTY_TYPE_NOT_RECOGNIZED,
+                f"Property<{property_type_name}> not a recognized schema.org property type",
+            )
 
-        return any([self._item_in(ancestor, self._getProperty(property_type_name, ignore_case).get('range', []),ignore_case) for ancestor in self._getType(object_type_name, ignore_case)["path"]])            
+        return any(
+            [
+                self._item_in(
+                    ancestor,
+                    self._getProperty(property_type_name, ignore_case).get("range", []),
+                    ignore_case,
+                )
+                for ancestor in self._getType(object_type_name, ignore_case)["path"]
+            ]
+        )
 
-    def TypeInPropertyDomain(self, subject_type_name:str, property_type_name:str, ignore_case=True, quiet=False) -> bool:
+    def TypeInPropertyDomain(
+        self,
+        subject_type_name: str,
+        property_type_name: str,
+        ignore_case=True,
+        quiet=False,
+    ) -> bool:
         if not self.IsValidType(subject_type_name, ignore_case):
             if quiet:
                 return False
-            raise AloeSchemaError(AloeSchemaErrorType.TYPE_NOT_RECOGNIZED, f"Subject type<{subject_type_name}> not a recognized schema.org type")
-        if not self.IsValidPropertyType(property_type_name,ignore_case):
-            if quiet:
-                return False
-            raise AloeSchemaError(AloeSchemaErrorType.PROPERTY_TYPE_NOT_RECOGNIZED, f"Property<{property_type_name}> not a recognized schema.org property type")
-
-        return any([self._item_in(ancestor, self._getProperty(property_type_name, ignore_case).get('domain', []),ignore_case) for ancestor in self._getType(subject_type_name, ignore_case)["path"]])
-        
-    def ValueTypeInProperty(self, property_type_name:str, value_type_name:str, ignore_case=True, quiet=False) -> bool:
-        if not self.IsValidValueType(value_type_name, ignore_case):
-            if quiet:
-                return False
-            raise AloeSchemaError(AloeSchemaErrorType.VALUE_TYPE_NOT_RECOGNIZED, f"Value type<{value_type_name}> not a recognized schema.org value type")
+            raise AloeSchemaError(
+                AloeSchemaErrorType.TYPE_NOT_RECOGNIZED,
+                f"Subject type<{subject_type_name}> not a recognized schema.org type",
+            )
         if not self.IsValidPropertyType(property_type_name, ignore_case):
             if quiet:
                 return False
-            raise AloeSchemaError(AloeSchemaErrorType.PROPERTY_TYPE_NOT_RECOGNIZED, f"Property<{property_type_name}> not a recognized schema.org property type")
-        return self._item_in(value_type_name,self._getProperty(property_type_name, ignore_case).get('datatype', []),ignore_case)            
-    
-    def Validate(self, subject_type_name:str = None, property_type_name:str = None, object_type_name:str = None, value_type_name:str=None, enumeration_value_name:str=None, ignore_case=True, quiet=False) -> bool:
+            raise AloeSchemaError(
+                AloeSchemaErrorType.PROPERTY_TYPE_NOT_RECOGNIZED,
+                f"Property<{property_type_name}> not a recognized schema.org property type",
+            )
+
+        return any(
+            [
+                self._item_in(
+                    ancestor,
+                    self._getProperty(property_type_name, ignore_case).get(
+                        "domain", []
+                    ),
+                    ignore_case,
+                )
+                for ancestor in self._getType(subject_type_name, ignore_case)["path"]
+            ]
+        )
+
+    def ValueTypeInProperty(
+        self,
+        property_type_name: str,
+        value_type_name: str,
+        ignore_case=True,
+        quiet=False,
+    ) -> bool:
+        if not self.IsValidValueType(value_type_name, ignore_case):
+            if quiet:
+                return False
+            raise AloeSchemaError(
+                AloeSchemaErrorType.VALUE_TYPE_NOT_RECOGNIZED,
+                f"Value type<{value_type_name}> not a recognized schema.org value type",
+            )
+        if not self.IsValidPropertyType(property_type_name, ignore_case):
+            if quiet:
+                return False
+            raise AloeSchemaError(
+                AloeSchemaErrorType.PROPERTY_TYPE_NOT_RECOGNIZED,
+                f"Property<{property_type_name}> not a recognized schema.org property type",
+            )
+        return self._item_in(
+            value_type_name,
+            self._getProperty(property_type_name, ignore_case).get("datatype", []),
+            ignore_case,
+        )
+
+    def Validate(
+        self,
+        subject_type_name: str = None,
+        property_type_name: str = None,
+        object_type_name: str = None,
+        value_type_name: str = None,
+        enumeration_value_name: str = None,
+        ignore_case=True,
+        quiet=False,
+    ) -> bool:
         if subject_type_name and not self.IsValidType(subject_type_name, ignore_case):
             if quiet:
                 return False
-            raise AloeSchemaError(AloeSchemaErrorType.TYPE_NOT_RECOGNIZED, f"Subject type<{subject_type_name}> not a recognized schema.org type")
-        if property_type_name and not self.IsValidPropertyType(property_type_name, ignore_case):
+            raise AloeSchemaError(
+                AloeSchemaErrorType.TYPE_NOT_RECOGNIZED,
+                f"Subject type<{subject_type_name}> not a recognized schema.org type",
+            )
+        if property_type_name and not self.IsValidPropertyType(
+            property_type_name, ignore_case
+        ):
             if quiet:
-                return False            
-            raise AloeSchemaError(AloeSchemaErrorType.PROPERTY_TYPE_NOT_RECOGNIZED, f"Property<{property_type_name}> not a recognized schema.org property type")
+                return False
+            raise AloeSchemaError(
+                AloeSchemaErrorType.PROPERTY_TYPE_NOT_RECOGNIZED,
+                f"Property<{property_type_name}> not a recognized schema.org property type",
+            )
         if object_type_name and not self.IsValidType(object_type_name, ignore_case):
             if quiet:
-                return False            
-            raise AloeSchemaError(AloeSchemaErrorType.TYPE_NOT_RECOGNIZED, f"Object type<{object_type_name}> not a recognized schema.org type")
+                return False
+            raise AloeSchemaError(
+                AloeSchemaErrorType.TYPE_NOT_RECOGNIZED,
+                f"Object type<{object_type_name}> not a recognized schema.org type",
+            )
         if value_type_name and not self.IsValidValueType(value_type_name, ignore_case):
             if quiet:
-                return False            
-            raise AloeSchemaError(AloeSchemaErrorType.VALUE_TYPE_NOT_RECOGNIZED, f"Value type<{value_type_name}> not a recognized schema.org value type")
+                return False
+            raise AloeSchemaError(
+                AloeSchemaErrorType.VALUE_TYPE_NOT_RECOGNIZED,
+                f"Value type<{value_type_name}> not a recognized schema.org value type",
+            )
         if subject_type_name and property_type_name:
-            if not self.TypeInPropertyDomain(subject_type_name, property_type_name, ignore_case, quiet):
+            if not self.TypeInPropertyDomain(
+                subject_type_name, property_type_name, ignore_case, quiet
+            ):
                 return False
         if property_type_name and object_type_name:
-            if not self.TypeInPropertyRange(property_type_name, object_type_name, ignore_case, quiet):
+            if not self.TypeInPropertyRange(
+                property_type_name, object_type_name, ignore_case, quiet
+            ):
                 return False
         if property_type_name and value_type_name:
-            if not self.ValueTypeInProperty(property_type_name, value_type_name, ignore_case, quiet):
+            if not self.ValueTypeInProperty(
+                property_type_name, value_type_name, ignore_case, quiet
+            ):
                 return False
         if enumeration_value_name:
             entry = self._getEnumerationValue(enumeration_value_name, ignore_case)
             if entry is None:
                 if quiet:
                     return False
-                raise AloeSchemaError(AloeSchemaErrorType.ENUMERATION_VALUE_NOT_RECOGNIZED,
-                    f"Enumeration value<{enumeration_value_name}> is not a recognized enumeration value")
+                raise AloeSchemaError(
+                    AloeSchemaErrorType.ENUMERATION_VALUE_NOT_RECOGNIZED,
+                    f"Enumeration value<{enumeration_value_name}> is not a recognized enumeration value",
+                )
             if property_type_name:
                 enum_type = entry["enum_type"]
-                if not self.TypeInPropertyRange(property_type_name, enum_type, ignore_case, quiet):
+                if not self.TypeInPropertyRange(
+                    property_type_name, enum_type, ignore_case, quiet
+                ):
                     return False
         return True
