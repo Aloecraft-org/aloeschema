@@ -10,7 +10,7 @@ authors = [{email = "michael@aloecraft.org"}]
 maintainers = [{email = "michael@aloecraft.org"}]
 readme = "README.md"
 license = "apache-2.0"
-requires-python = ">=3.9"
+requires-python = ">=3.11"
 
 dependencies = [
     "requests"
