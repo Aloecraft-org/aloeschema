@@ -46,23 +46,26 @@ schema_validator.Validate(subject_type_name="person", property_type_name="potent
 schema_validator._getType("schedule")
 ```
 
-**Extending Schema.org With Custom Types and Properties**
+**Extending Schema.org With Custom Types, Properties, and Enumerations**
 
-use `registerCustomType` and `registerCustomProperty` to extend Schema.org with custom types and properties
+use `registerCustomType`, `registerCustomProperty`, `registerCustomEnumeration`, and `registerCustomEnumerationValue` to extend Schema.org
 
 ``` py
 from aloeschema.validator import AloeSchemaValidator
-from aloeschema import load_schema_org, registerCustomProperty, registerCustomType
+from aloeschema import load_schema_org, registerCustomProperty, registerCustomType, registerCustomEnumeration, registerCustomEnumerationValue
 
 schema_org = load_schema_org()
 
 schema_org = registerCustomType(schema_org, name="User", parent="Person", properties=[])
-schema_org = registerCustomProperty(schema_org, name:="userName",   domain=["Person", "User"], range=["Text"])
+schema_org = registerCustomProperty(schema_org, name="userName", domain=["Person", "User"], range=["Text"])
 
-schema_validator =  AloeSchemaValidator(schema_org)
+schema_org = registerCustomEnumeration(schema_org, name="TaskStatus")
+schema_org = registerCustomEnumerationValue(schema_org, enum_type="TaskStatus", value="TaskStatusActive")
+schema_org = registerCustomProperty(schema_org, name="taskStatus", domain=["User"], range=["TaskStatus"])
 
-print(f"""
-Custom Property: `userName`
-Description: {schema_validator._getProperty("userName", ignore_case=True)}
-""")
+schema_validator = AloeSchemaValidator(schema_org)
+
+schema_validator.IsEnumerationType("TaskStatus")                                           # True
+schema_validator.EnumerationValueIsOfType("TaskStatus", "TaskStatusActive")               # True
+schema_validator.Validate(subject_type_name="User", property_type_name="taskStatus", enumeration_value_name="TaskStatusActive")  # True
 ```

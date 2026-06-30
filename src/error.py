@@ -1,4 +1,4 @@
-# Copyright (C) [2026] [michael@aloecraft.org]
+# Copyright (C) Michael Godfrey 2026 | aloecraft.org <michael@aloecraft.org>
 # Licensed under the Apache License, Version 2.0.
 # 
 # Licensed to the Apache Software Foundation (ASF) under one

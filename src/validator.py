@@ -1,4 +1,4 @@
-# Copyright (C) [2026] [michael@aloecraft.org]
+# Copyright (C) Michael Godfrey 2026 | aloecraft.org <michael@aloecraft.org>
 # Licensed under the Apache License, Version 2.0.
 # 
 # Licensed to the Apache Software Foundation (ASF) under one
@@ -48,6 +48,96 @@ class AloeSchemaValidator:
     def _item_in(self, item, collection, ignore_case=True):
         return (item.lower() if ignore_case else item) in [c.lower() if ignore_case else c for c in collection]
     
+    def _getEnumerationValue(self, value_name: str, ignore_case=True):
+        if ignore_case:
+            matches = [v for k, v in self.schema_org["enumerations"].items() if k.lower() == value_name.lower()]
+            return matches[0] if matches else None
+        return self.schema_org["enumerations"].get(value_name, None)
+
+    def IsEnumerationType(self, type_name: str, ignore_case=True) -> bool:
+        t = self._getType(type_name, ignore_case)
+        return bool(t) and self._item_in("Enumeration", t.get("path", []), ignore_case)
+
+    def IsValidEnumerationValue(self, value_name: str, ignore_case=True) -> bool:
+        return self._getEnumerationValue(value_name, ignore_case) is not None
+
+    def EnumerationValueIsOfType(self, enum_type_name: str, value_name: str, ignore_case=True, quiet=False) -> bool:
+        if not self.IsEnumerationType(enum_type_name, ignore_case):
+            if quiet:
+                return False
+            raise AloeSchemaError(AloeSchemaErrorType.ENUMERATION_TYPE_NOT_RECOGNIZED,
+                f"Enumeration type<{enum_type_name}> is not a recognized enumeration type")
+        entry = self._getEnumerationValue(value_name, ignore_case)
+        if entry is None:
+            if quiet:
+                return False
+            raise AloeSchemaError(AloeSchemaErrorType.ENUMERATION_VALUE_NOT_RECOGNIZED,
+                f"Enumeration value<{value_name}> is not a recognized enumeration value")
+        stored_type = entry["enum_type"]
+        if ignore_case:
+            return stored_type.lower() == enum_type_name.lower()
+        return stored_type == enum_type_name
+
+    def _getEnumerationValue(self, value_name: str, ignore_case=True):
+        if ignore_case:
+            matches = [v for k, v in self.schema_org["enumerations"].items() if k.lower() == value_name.lower()]
+            return matches[0] if matches else None
+        return self.schema_org["enumerations"].get(value_name, None)
+
+    def IsEnumerationType(self, type_name: str, ignore_case=True) -> bool:
+        t = self._getType(type_name, ignore_case)
+        return bool(t) and self._item_in("Enumeration", t.get("path", []), ignore_case)
+
+    def IsValidEnumerationValue(self, value_name: str, ignore_case=True) -> bool:
+        return self._getEnumerationValue(value_name, ignore_case) is not None
+
+    def EnumerationValueIsOfType(self, enum_type_name: str, value_name: str, ignore_case=True, quiet=False) -> bool:
+        if not self.IsEnumerationType(enum_type_name, ignore_case):
+            if quiet:
+                return False
+            raise AloeSchemaError(AloeSchemaErrorType.ENUMERATION_TYPE_NOT_RECOGNIZED,
+                f"Enumeration type<{enum_type_name}> is not a recognized enumeration type")
+        entry = self._getEnumerationValue(value_name, ignore_case)
+        if entry is None:
+            if quiet:
+                return False
+            raise AloeSchemaError(AloeSchemaErrorType.ENUMERATION_VALUE_NOT_RECOGNIZED,
+                f"Enumeration value<{value_name}> is not a recognized enumeration value")
+        stored_type = entry["enum_type"]
+        if ignore_case:
+            return stored_type.lower() == enum_type_name.lower()
+        return stored_type == enum_type_name
+
+    def _getEnumerationValue(self, value_name: str, ignore_case=True):
+        if ignore_case:
+            matches = [v for k, v in self.schema_org["enumerations"].items() if k.lower() == value_name.lower()]
+            return matches[0] if matches else None
+        return self.schema_org["enumerations"].get(value_name, None)
+
+    def IsEnumerationType(self, type_name: str, ignore_case=True) -> bool:
+        t = self._getType(type_name, ignore_case)
+        return bool(t) and self._item_in("Enumeration", t.get("path", []), ignore_case)
+
+    def IsValidEnumerationValue(self, value_name: str, ignore_case=True) -> bool:
+        return self._getEnumerationValue(value_name, ignore_case) is not None
+
+    def EnumerationValueIsOfType(self, enum_type_name: str, value_name: str, ignore_case=True, quiet=False) -> bool:
+        if not self.IsEnumerationType(enum_type_name, ignore_case):
+            if quiet:
+                return False
+            raise AloeSchemaError(AloeSchemaErrorType.ENUMERATION_TYPE_NOT_RECOGNIZED,
+                f"Enumeration type<{enum_type_name}> is not a recognized enumeration type")
+        entry = self._getEnumerationValue(value_name, ignore_case)
+        if entry is None:
+            if quiet:
+                return False
+            raise AloeSchemaError(AloeSchemaErrorType.ENUMERATION_VALUE_NOT_RECOGNIZED,
+                f"Enumeration value<{value_name}> is not a recognized enumeration value")
+        stored_type = entry["enum_type"]
+        if ignore_case:
+            return stored_type.lower() == enum_type_name.lower()
+        return stored_type == enum_type_name
+
     def IsValidType(self, type_name:str, ignore_case=True) -> bool:
         return self._getType(type_name, ignore_case)
 
@@ -105,7 +195,7 @@ class AloeSchemaValidator:
             raise AloeSchemaError(AloeSchemaErrorType.PROPERTY_TYPE_NOT_RECOGNIZED, f"Property<{property_type_name}> not a recognized schema.org property type")
         return self._item_in(value_type_name,self._getProperty(property_type_name, ignore_case).get('datatype', []),ignore_case)            
     
-    def Validate(self, subject_type_name:str = None, property_type_name:str = None, object_type_name:str = None,  value_type_name:str=None, ignore_case=True, quiet=False) -> bool:
+    def Validate(self, subject_type_name:str = None, property_type_name:str = None, object_type_name:str = None, value_type_name:str=None, enumeration_value_name:str=None, ignore_case=True, quiet=False) -> bool:
         if subject_type_name and not self.IsValidType(subject_type_name, ignore_case):
             if quiet:
                 return False
@@ -130,5 +220,16 @@ class AloeSchemaValidator:
                 return False
         if property_type_name and value_type_name:
             if not self.ValueTypeInProperty(property_type_name, value_type_name, ignore_case, quiet):
-                return False        
+                return False
+        if enumeration_value_name:
+            entry = self._getEnumerationValue(enumeration_value_name, ignore_case)
+            if entry is None:
+                if quiet:
+                    return False
+                raise AloeSchemaError(AloeSchemaErrorType.ENUMERATION_VALUE_NOT_RECOGNIZED,
+                    f"Enumeration value<{enumeration_value_name}> is not a recognized enumeration value")
+            if property_type_name:
+                enum_type = entry["enum_type"]
+                if not self.TypeInPropertyRange(property_type_name, enum_type, ignore_case, quiet):
+                    return False
         return True

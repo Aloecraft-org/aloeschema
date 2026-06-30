@@ -1,0 +1,6 @@
+pydantic
+msgpack
+cbor2
+lz4
+cryptography
+pytest
