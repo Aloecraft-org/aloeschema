@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name="aloeschema"
-version = "0.1.0"
+version = "0.2.0"
 description="Aloeschema is a simple schema.org accessor and validator that allows custom types and properties"
 authors = [{email = "michael@aloecraft.org"}]
 maintainers = [{email = "michael@aloecraft.org"}]
