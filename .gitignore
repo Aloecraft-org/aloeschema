@@ -8,3 +8,7 @@ x.md
 dist
 .nogit
 .html_doc
+build
+.pytest_cache
+.ruff_cache
+__pycache__
