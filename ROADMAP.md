@@ -18,60 +18,72 @@ order. Each stage is shippable on its own.
 **Goal:** the package on PyPI installs and works, the code does what it claims, and
 CI catches the classes of defect that got us here.
 
-**Status:** in progress
+**Status:** complete — released as 0.3.0
 
 ### Build and packaging
 
-- [ ] Include `aloeschema.data` in the wheel. `pyproject.toml` declares
+- [x] Include `aloeschema.data` in the wheel. `pyproject.toml` declares
       `packages = ["aloeschema"]`, so `src/data/` is excluded from the built
       distribution and `load_schema_org()` raises `ModuleNotFoundError` for every
       user who installs from PyPI. CI does not catch this because it installs with
       `pip install -e .`, which resolves against the source tree.
-- [ ] Raise the build-system `setuptools` floor to `>=77`. The PEP 639
+- [x] Raise the build-system `setuptools` floor to `>=77`. The PEP 639
       `license = "apache-2.0"` string is not understood by setuptools 68 and fails
       the build with a schema validation error.
-- [ ] Fix `[tool.pytest.ini_options] testpaths`, which points at `test` — a
+- [x] Fix `[tool.pytest.ini_options] testpaths`, which points at `test` — a
       directory that does not exist. Bare `pytest` currently collects nothing.
-- [ ] Make `requests` an optional dependency. It is a hard requirement today but is
+- [x] Make `requests` an optional dependency. It is a hard requirement today but is
       only used by the `load_schema_org(fetch=True)` path.
-- [ ] Add a CI job that builds the wheel, installs it into a clean environment, and
+- [x] Add a CI job that builds the wheel, installs it into a clean environment, and
       runs the README examples against it. This is the specific check that would
       have caught the packaging bug.
 
 ### Correctness
 
-- [ ] `registerCustomType` aliases the parent's ancestry list instead of copying it,
+- [x] `registerCustomType` aliases the parent's ancestry list instead of copying it,
       so registering a child mutates its parent in place:
       `Person` becomes `['Thing', 'Person', 'User']`, and `TypeDescendantOf('User',
       'Person')` returns `True`. Sibling registrations compound the corruption. This
       breaks the feature the library exists to provide.
-- [ ] `registerCustomProperty` has an inverted range guard
+- [x] `registerCustomProperty` has an inverted range guard
       (`if not IsValidType(x) or IsValidValueType(x)`), so every valid datatype range
       is rejected. The `registerCustomProperty` example in the README raises.
-- [ ] Model the type hierarchy as the DAG it actually is. `_extract_types` follows
+- [x] Model the type hierarchy as the DAG it actually is. `_extract_types` follows
       only the first parent, discarding multiple inheritance for the 57 types that
       declare more than one parent. 84 types end up unreachable from `Thing`, so
       `Certification` cannot have a `name` and `Diet` cannot have `overview`.
       Replace the single `path` list with a transitively-closed ancestor set.
-- [ ] `AloeSchemaError` extends `BaseException`, so it escapes `except Exception:`
+- [x] `AloeSchemaError` extends `BaseException`, so it escapes `except Exception:`
       in calling code. It should extend `Exception`.
-- [ ] `IsValidType` / `IsValidPropertyType` are annotated `-> bool` but return a
+- [x] `IsValidType` / `IsValidPropertyType` are annotated `-> bool` but return a
       dict or `None`.
-- [ ] `_extract_types` is O(n²): it does a linear scan over the whole graph inside a
+- [x] `_extract_types` is O(n²): it does a linear scan over the whole graph inside a
       `while` loop. The ancestor-set rewrite should fix this as a side effect.
 
 ### Code quality
 
-- [ ] Remove triplicated definitions. `validator.py`, `__init__.py`, and
+- [x] Remove triplicated definitions. `validator.py`, `__init__.py`, and
       `tests/test_unit.py` each contain three copies of the same functions. Python's
       last-definition-wins makes this invisible at runtime — except in the test file,
       where it means two of the three enumeration tests never execute.
-- [ ] Remove the module-level `TextTestRunner` call in `tests/test_unit.py`, which
+- [x] Remove the module-level `TextTestRunner` call in `tests/test_unit.py`, which
       runs the suite a second time at import.
-- [ ] Add assertions to `test_inheritsAncestorProperties`, which currently asserts
+- [x] Add assertions to `test_inheritsAncestorProperties`, which currently asserts
       nothing.
-- [ ] Add `ruff` to CI with `F811` (redefinition) enabled — the rule that flags the
+- [x] Add `ruff` to CI with `F811` (redefinition) enabled — the rule that flags the
       duplication above.
+
+### Found while fixing the above
+
+- [x] `registerCustomType` raised `KeyError` for any parent that had no children,
+      because `children` was only present on types that already had some.
+      Registering under a leaf type — an entirely ordinary thing to do — failed.
+- [x] `registerCustomType` had a mutable default argument (`properties=[]`).
+- [x] `registerCustomType` copied the parent's properties onto the child and
+      appended the child to each of those properties' domains, mutating unrelated
+      entries. Inheritance is resolved by walking `ancestors` during validation, so
+      the copy was redundant as well as damaging. Properties passed in by the caller
+      were never attached to their domain at all; now they are.
 
 ---
 
