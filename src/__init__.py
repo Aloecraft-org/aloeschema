@@ -18,8 +18,6 @@
 # specific language governing permissions and limitations
 # under the License
 
-import requests
-
 SCHEMA_URL = "https://schema.org/version/latest/schemaorg-current-https.jsonld"
 
 
@@ -290,6 +288,14 @@ def registerCustomType(
 def load_schema_org(fetch=False):
     data = {}
     if fetch:
+        try:
+            import requests
+        except ImportError as exc:
+            raise ImportError(
+                "load_schema_org(fetch=True) needs the 'requests' package. "
+                "Install it with: pip install aloeschema[fetch]"
+            ) from exc
+
         data = requests.get(SCHEMA_URL).json()
     else:
         from aloeschema.data.schemaorg_current import schemaorg_current_jsonld

@@ -1,10 +1,12 @@
 [build-system]
-requires = ["setuptools>=61.0"]
+# 77 is the first release that understands the PEP 639 `license` string
+# below; older setuptools fails the build with a schema validation error.
+requires = ["setuptools>=77.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name="aloeschema"
-version = "0.2.3"
+version = "0.3.0"
 description="Aloeschema is a simple schema.org accessor and validator that allows custom types and properties"
 authors = [{email = "michael@aloecraft.org"}]
 maintainers = [{email = "michael@aloecraft.org"}]
@@ -12,27 +14,34 @@ readme = "README.md"
 license = "apache-2.0"
 requires-python = ">=3.11"
 
-dependencies = [
-    "requests"
-]
+dependencies = []
 
 [project.urls]
 Homepage = "https://github.com/Aloecraft-org/aloeschema"
 Repository = "https://github.com/Aloecraft-org/aloeschema"
 
 [project.optional-dependencies]
+# Only needed by load_schema_org(fetch=True); the bundled snapshot is used
+# by default and requires nothing.
+fetch = [
+    "requests",
+]
 test = [
     "pytest",
     "coverage",
+    "requests",
 ]
 
 [tool.pytest.ini_options]
 minversion = "6.0"
-addopts = "--verbose" # Example options for verbose output and coverage
+addopts = "--verbose"
 testpaths = [
-    "test",
+    "tests",
 ]
 
 [tool.setuptools]
 package-dir = { "aloeschema" = "src" }
-packages = ["aloeschema"]
+# aloeschema.data holds the bundled schema.org snapshot. Omitting it here
+# excluded src/data from the wheel, so load_schema_org() raised
+# ModuleNotFoundError for everyone who installed from PyPI.
+packages = ["aloeschema", "aloeschema.data"]
