@@ -59,42 +59,6 @@ def _is_enumeration_type(type_name, types):
     return "Enumeration" in types.get(type_name, {}).get("path", [])
 
 
-def _extract_enumeration_values(graph, types):
-    enumeration_values = {}
-    for node in graph:
-        node_type = node.get("@type", "")
-        if isinstance(node_type, str):
-            node_type = node_type.replace("schema:", "")
-        else:
-            continue
-        if node_type in types and _is_enumeration_type(node_type, types):
-            name = node["@id"].replace("schema:", "")
-            enumeration_values[name] = {"enum_type": node_type}
-    return enumeration_values
-
-
-def _is_enumeration_type(type_name, types):
-    return "Enumeration" in types.get(type_name, {}).get("path", [])
-
-
-def _extract_enumeration_values(graph, types):
-    enumeration_values = {}
-    for node in graph:
-        node_type = node.get("@type", "")
-        if isinstance(node_type, str):
-            node_type = node_type.replace("schema:", "")
-        else:
-            continue
-        if node_type in types and _is_enumeration_type(node_type, types):
-            name = node["@id"].replace("schema:", "")
-            enumeration_values[name] = {"enum_type": node_type}
-    return enumeration_values
-
-
-def _is_enumeration_type(type_name, types):
-    return "Enumeration" in types.get(type_name, {}).get("path", [])
-
-
 def _extract_types(graph):
     types = {}
     for node in graph:
@@ -237,56 +201,6 @@ def registerCustomProperty(
     for parent_type in domain:
         schema_org_dict["types"][parent_type]["properties"].append(name)
 
-    return schema_org_dict
-
-
-def registerCustomEnumeration(schema_org_dict, name: str) -> dict:
-    """Register a new enumeration type (subclass of Enumeration)."""
-    return registerCustomType(
-        schema_org_dict, name=name, parent="Enumeration", properties=[]
-    )
-
-
-def registerCustomEnumerationValue(schema_org_dict, enum_type: str, value: str) -> dict:
-    """Register a new enumeration value (instance of an enumeration type)."""
-    from aloeschema.validator import AloeSchemaValidator
-
-    schema_validator = AloeSchemaValidator(schema_org_dict)
-
-    if not schema_validator.IsEnumerationType(enum_type):
-        from aloeschema.error import AloeSchemaError, AloeSchemaErrorType
-
-        raise AloeSchemaError(
-            AloeSchemaErrorType.ENUMERATION_TYPE_NOT_RECOGNIZED,
-            f"Enumeration type<{enum_type}> is not a recognized enumeration type",
-        )
-
-    schema_org_dict["enumerations"][value] = {"enum_type": enum_type}
-    return schema_org_dict
-
-
-def registerCustomEnumeration(schema_org_dict, name: str) -> dict:
-    """Register a new enumeration type (subclass of Enumeration)."""
-    return registerCustomType(
-        schema_org_dict, name=name, parent="Enumeration", properties=[]
-    )
-
-
-def registerCustomEnumerationValue(schema_org_dict, enum_type: str, value: str) -> dict:
-    """Register a new enumeration value (instance of an enumeration type)."""
-    from aloeschema.validator import AloeSchemaValidator
-
-    schema_validator = AloeSchemaValidator(schema_org_dict)
-
-    if not schema_validator.IsEnumerationType(enum_type):
-        from aloeschema.error import AloeSchemaError, AloeSchemaErrorType
-
-        raise AloeSchemaError(
-            AloeSchemaErrorType.ENUMERATION_TYPE_NOT_RECOGNIZED,
-            f"Enumeration type<{enum_type}> is not a recognized enumeration type",
-        )
-
-    schema_org_dict["enumerations"][value] = {"enum_type": enum_type}
     return schema_org_dict
 
 

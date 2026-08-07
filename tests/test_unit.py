@@ -18,14 +18,15 @@
 # specific language governing permissions and limitations
 # under the License
 
-from aloeschema.error import AloeSchemaErrorType, AloeSchemaError
-from aloeschema.validator import AloeSchemaValidator
+import unittest
+from copy import deepcopy
+
 from aloeschema import load_schema_org
+from aloeschema.error import AloeSchemaError
+from aloeschema.validator import AloeSchemaValidator
 
 aloe_schema_org = load_schema_org()
 schema_validator = AloeSchemaValidator(aloe_schema_org)
-
-import unittest
 
 
 class TestFuncs(unittest.TestCase):
@@ -116,60 +117,13 @@ class TestFuncs(unittest.TestCase):
         self.assertFalse(schema_validator.TypeDescendantOf("Person", "Thing"))
 
     def test_inheritsAncestorProperties(self):
-        schema_validator.Validate(
-            subject_type_name="person",
-            property_type_name="potentialAction",
-            object_type_name="planAction",
-            quiet=False,
-        )
-
-    def test_enumerations(self):
-        schema_validator = AloeSchemaValidator(aloe_schema_org)
-        from aloeschema import registerCustomEnumeration, registerCustomEnumerationValue
-
-        # IsEnumerationType
-        self.assertTrue(schema_validator.IsEnumerationType("DayOfWeek"))
-        self.assertFalse(schema_validator.IsEnumerationType("Person"))
-        self.assertFalse(schema_validator.IsEnumerationType("B-a-n-a-n-a-s"))
-
-        # Built-in enum values extracted from schema.org
-        self.assertTrue(schema_validator.IsValidEnumerationValue("Monday"))
-        self.assertFalse(schema_validator.IsValidEnumerationValue("Mondayyyy"))
-
-        # EnumerationValueIsOfType
+        # potentialAction is declared on Thing, so Person must inherit it.
         self.assertTrue(
-            schema_validator.EnumerationValueIsOfType("DayOfWeek", "Monday")
-        )
-        self.assertFalse(
-            schema_validator.EnumerationValueIsOfType("DayOfWeek", "Monday", quiet=True)
-            == False
-            or not schema_validator.EnumerationValueIsOfType("DayOfWeek", "Monday")
-        )
-        with self.assertRaises(AloeSchemaError):
-            schema_validator.EnumerationValueIsOfType("DayOfWeek", "Mondayyyy")
-        with self.assertRaises(AloeSchemaError):
-            schema_validator.EnumerationValueIsOfType("B-a-n-a-n-a-s", "Monday")
-
-        # Custom enum registration
-        custom_schema = registerCustomEnumeration(
-            aloe_schema_org.copy(), name="TaskStatus"
-        )
-        custom_schema = registerCustomEnumerationValue(
-            custom_schema, enum_type="TaskStatus", value="Active"
-        )
-        custom_schema = registerCustomEnumerationValue(
-            custom_schema, enum_type="TaskStatus", value="Pending"
-        )
-        custom_validator = AloeSchemaValidator(custom_schema)
-
-        self.assertTrue(custom_validator.IsEnumerationType("TaskStatus"))
-        self.assertTrue(custom_validator.IsValidEnumerationValue("Active"))
-        self.assertTrue(
-            custom_validator.EnumerationValueIsOfType("TaskStatus", "Active")
-        )
-        self.assertFalse(
-            custom_validator.EnumerationValueIsOfType(
-                "TaskStatus", "Monday", quiet=True
+            schema_validator.Validate(
+                subject_type_name="person",
+                property_type_name="potentialAction",
+                object_type_name="planAction",
+                quiet=False,
             )
         )
 
@@ -190,69 +144,18 @@ class TestFuncs(unittest.TestCase):
         self.assertTrue(
             schema_validator.EnumerationValueIsOfType("DayOfWeek", "Monday")
         )
-        self.assertFalse(
+        self.assertTrue(
             schema_validator.EnumerationValueIsOfType("DayOfWeek", "Monday", quiet=True)
-            == False
-            or not schema_validator.EnumerationValueIsOfType("DayOfWeek", "Monday")
         )
         with self.assertRaises(AloeSchemaError):
             schema_validator.EnumerationValueIsOfType("DayOfWeek", "Mondayyyy")
         with self.assertRaises(AloeSchemaError):
             schema_validator.EnumerationValueIsOfType("B-a-n-a-n-a-s", "Monday")
 
-        # Custom enum registration
+        # Custom enum registration. deepcopy because the register* helpers mutate
+        # the schema they are given, and a shallow copy shares the nested dicts.
         custom_schema = registerCustomEnumeration(
-            aloe_schema_org.copy(), name="TaskStatus"
-        )
-        custom_schema = registerCustomEnumerationValue(
-            custom_schema, enum_type="TaskStatus", value="Active"
-        )
-        custom_schema = registerCustomEnumerationValue(
-            custom_schema, enum_type="TaskStatus", value="Pending"
-        )
-        custom_validator = AloeSchemaValidator(custom_schema)
-
-        self.assertTrue(custom_validator.IsEnumerationType("TaskStatus"))
-        self.assertTrue(custom_validator.IsValidEnumerationValue("Active"))
-        self.assertTrue(
-            custom_validator.EnumerationValueIsOfType("TaskStatus", "Active")
-        )
-        self.assertFalse(
-            custom_validator.EnumerationValueIsOfType(
-                "TaskStatus", "Monday", quiet=True
-            )
-        )
-
-    def test_enumerations(self):
-        schema_validator = AloeSchemaValidator(aloe_schema_org)
-        from aloeschema import registerCustomEnumeration, registerCustomEnumerationValue
-
-        # IsEnumerationType
-        self.assertTrue(schema_validator.IsEnumerationType("DayOfWeek"))
-        self.assertFalse(schema_validator.IsEnumerationType("Person"))
-        self.assertFalse(schema_validator.IsEnumerationType("B-a-n-a-n-a-s"))
-
-        # Built-in enum values extracted from schema.org
-        self.assertTrue(schema_validator.IsValidEnumerationValue("Monday"))
-        self.assertFalse(schema_validator.IsValidEnumerationValue("Mondayyyy"))
-
-        # EnumerationValueIsOfType
-        self.assertTrue(
-            schema_validator.EnumerationValueIsOfType("DayOfWeek", "Monday")
-        )
-        self.assertFalse(
-            schema_validator.EnumerationValueIsOfType("DayOfWeek", "Monday", quiet=True)
-            == False
-            or not schema_validator.EnumerationValueIsOfType("DayOfWeek", "Monday")
-        )
-        with self.assertRaises(AloeSchemaError):
-            schema_validator.EnumerationValueIsOfType("DayOfWeek", "Mondayyyy")
-        with self.assertRaises(AloeSchemaError):
-            schema_validator.EnumerationValueIsOfType("B-a-n-a-n-a-s", "Monday")
-
-        # Custom enum registration
-        custom_schema = registerCustomEnumeration(
-            aloe_schema_org.copy(), name="TaskStatus"
+            deepcopy(aloe_schema_org), name="TaskStatus"
         )
         custom_schema = registerCustomEnumerationValue(
             custom_schema, enum_type="TaskStatus", value="Active"
@@ -294,4 +197,5 @@ class TestFuncs(unittest.TestCase):
         )
 
 
-unittest.TextTestRunner().run(unittest.TestLoader().loadTestsFromTestCase(TestFuncs))
+if __name__ == "__main__":
+    unittest.main()
