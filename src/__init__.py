@@ -23,22 +23,30 @@ import requests
 SCHEMA_URL = "https://schema.org/version/latest/schemaorg-current-https.jsonld"
 
 
-def _add_children(graph, types):
-    for node in graph:
-        if node.get("@type") == "rdfs:Class" or "schema:DataType" in node.get("@type"):
-            name = node["@id"].replace("schema:", "")
-            parents = normalize_to_list(node.get("rdfs:subClassOf"))
+def _is_class_node(node):
+    node_types = normalize_to_list(node.get("@type"))
+    return "rdfs:Class" in node_types or "schema:DataType" in node_types
 
-            # normal parent linking
-            for parent in parents:
-                parent_id = clean_id(parent)
-                if parent_id and parent_id in types:
-                    types[parent_id].setdefault("children", []).append(name)
 
-            # special case: datatypes should be children of DataType
-            if "schema:DataType" in node.get("@type"):
-                if "DataType" in types:
-                    types["DataType"].setdefault("children", []).append(name)
+def _is_datatype_node(node):
+    return "schema:DataType" in normalize_to_list(node.get("@type"))
+
+
+def _direct_parents(node):
+    """Every declared superclass of a class node, not just the first one.
+
+    schema.org is a DAG: 57 types declare more than one rdfs:subClassOf.
+    Datatypes additionally hang off the synthetic DataType root.
+    """
+    parents = [
+        p
+        for p in (clean_id(p) for p in normalize_to_list(node.get("rdfs:subClassOf")))
+        if p
+    ]
+    name = clean_id(node.get("@id"))
+    if _is_datatype_node(node) and name != "DataType" and "DataType" not in parents:
+        parents.append("DataType")
+    return parents
 
 
 def _extract_enumeration_values(graph, types):
@@ -56,55 +64,68 @@ def _extract_enumeration_values(graph, types):
 
 
 def _is_enumeration_type(type_name, types):
-    return "Enumeration" in types.get(type_name, {}).get("path", [])
+    return "Enumeration" in types.get(type_name, {}).get("ancestors", [])
+
+
+def _transitive_ancestors(name, parents_of, cache, visiting=None):
+    """All superclasses of `name`, transitively, including `name` itself.
+
+    Memoised, and guarded against the cycles a hand-edited vocabulary can
+    introduce. Names referenced as a parent but never defined as a class node
+    (external vocabularies such as fibo: or dcat:) resolve to just themselves.
+    """
+    if name in cache:
+        return cache[name]
+    if visiting is None:
+        visiting = set()
+    if name in visiting:
+        return {name}
+    visiting.add(name)
+
+    ancestors = {name}
+    for parent in parents_of.get(name, ()):
+        ancestors |= _transitive_ancestors(parent, parents_of, cache, visiting)
+
+    visiting.discard(name)
+    cache[name] = ancestors
+    return ancestors
 
 
 def _extract_types(graph):
-    types = {}
+    class_nodes = {}
     for node in graph:
-        if node.get("@type") == "rdfs:Class" or "schema:DataType" in node.get("@type"):
-            name = node["@id"].replace("schema:", "")
-            path = [name]
+        if _is_class_node(node):
+            name = clean_id(node.get("@id"))
+            if name:
+                class_nodes[name] = node
 
-            # special case: if it's a schema:DataType, add DataType at the front
-            if "schema:DataType" in node.get("@type"):
-                path.insert(0, "DataType")
+    parents_of = {name: _direct_parents(node) for name, node in class_nodes.items()}
 
-            # normalize to list
-            parents = node.get("rdfs:subClassOf")
-            if parents and not isinstance(parents, list):
-                parents = [parents]
+    cache = {}
+    for name in class_nodes:
+        _transitive_ancestors(name, parents_of, cache)
 
-            while parents:
-                # just take the first parent for path (schema.org often has multiple)
-                parent = parents[0]
-                parent_id = parent["@id"].replace("schema:", "")
-                path.insert(0, parent_id)
+    def depth(name):
+        # Root-first ordering: a type's own ancestor count is its depth.
+        return len(cache.get(name, {name}))
 
-                # find parent node
-                parent_node = next(
-                    (n for n in graph if n["@id"] == parent["@id"]), None
-                )
-                if parent_node:
-                    # if the parent itself is a schema:DataType, ensure DataType is at the root
-                    if "schema:DataType" in parent_node.get("@type", []):
-                        if path[0] != "DataType":
-                            path.insert(0, "DataType")
+    types = {}
+    for name in class_nodes:
+        ancestors = sorted(cache[name], key=lambda a: (depth(a), a))
+        types[name] = {
+            "ancestors": ancestors,
+            # Retained as an alias of `ancestors` for backwards compatibility.
+            # Deprecated: the hierarchy is a DAG, so there is no single path.
+            "path": ancestors,
+            "properties": [],
+            "children": [],
+        }
 
-                    next_parents = parent_node.get("rdfs:subClassOf")
-                    if next_parents and not isinstance(next_parents, list):
-                        next_parents = [next_parents]
-                    parents = next_parents
-                else:
-                    parents = None
+    for name, parents in parents_of.items():
+        for parent in parents:
+            if parent in types:
+                types[parent]["children"].append(name)
 
-            # ensure DataType is at the root if this node or any ancestor is a schema:DataType
-            if "schema:DataType" in node.get("@type") or "DataType" in path:
-                if path[0] != "DataType":
-                    path.insert(0, "DataType")
-
-            types[name] = {"path": path, "properties": []}
-    _add_children(graph, types)
     return types
 
 
@@ -177,9 +198,9 @@ def registerCustomProperty(
     schema_validator = AloeSchemaValidator(schema_org_dict)
 
     for range_item_type in range:
-        if not schema_validator.IsValidType(
-            range_item_type
-        ) or schema_validator.IsValidValueType(range_item_type):
+        # A range entry must be a known type. Value types (Text, Integer, ...)
+        # are themselves types, so IsValidType alone is the correct test.
+        if not schema_validator.IsValidType(range_item_type):
             raise AloeSchemaError(
                 AloeSchemaErrorType.PROPERTY_RANGE_TYPE_NOT_RECOGNIZED,
                 f"Range type<{range_item_type}> not a recognized schema.org type or valueType",
@@ -230,26 +251,37 @@ def registerCustomEnumerationValue(schema_org_dict, enum_type: str, value: str) 
 
 
 def registerCustomType(
-    schema_org_dict, name: str, parent: str, properties: list[str] = []
+    schema_org_dict, name: str, parent: str, properties: list[str] = None
 ) -> dict:
     from aloeschema.validator import AloeSchemaValidator
+
+    properties = list(properties) if properties else []
 
     schema_validator = AloeSchemaValidator(schema_org_dict)
     schema_validator.Validate(subject_type_name=parent)
     for prop in properties:
         schema_validator.Validate(property_type_name=prop)
 
-    schema_org_dict["types"][parent]["children"].append(name)
-    path = schema_org_dict["types"][parent]["path"]
-    path.append(name)
+    parent_entry = schema_org_dict["types"][parent]
+    parent_entry.setdefault("children", []).append(name)
+
+    # Copy the parent's ancestors. Aliasing the parent's list here and
+    # appending to it rewrites the parent's own ancestry in place, which made
+    # every sibling an ancestor of every other sibling.
+    ancestors = list(parent_entry.get("ancestors", parent_entry.get("path", []))) + [
+        name
+    ]
 
     schema_org_dict["types"][name] = {
-        "path": path,
+        "ancestors": ancestors,
+        "path": ancestors,
+        # Only properties declared directly on this type. Properties inherited
+        # from ancestors are resolved during validation by walking `ancestors`,
+        # so materialising them here would just duplicate that.
         "properties": properties,
         "children": [],
     }
-    for prop in schema_org_dict["types"][parent]["properties"]:
-        schema_org_dict["types"][name]["properties"].append(prop)
+    for prop in properties:
         schema_org_dict["properties"][prop]["domain"].append(name)
 
     return schema_org_dict
@@ -279,17 +311,23 @@ def load_schema_org(fetch=False):
 if __name__ == "__main__":
     schema_org = load_schema_org()
 
+    # `ancestors` holds every transitive superclass, including the type itself.
+    # `path` is a deprecated alias of `ancestors`, kept for backwards
+    # compatibility; the hierarchy is a DAG, so there is no single path.
+
     schema_org["types"]["DataType"]
-    # {'path': ['rdfs:Class', 'DataType'], 'properties': [], 'children': ['DateTime', 'Date', 'Boolean', 'Time', 'Text', 'Number']}
+    # {'ancestors': ['rdfs:Class', 'DataType'], 'path': [...], 'properties': [], 'children': ['DateTime', 'Date', 'Boolean', 'Time', 'Text', 'Number']}
 
     schema_org["properties"]["knowsAbout"]
     # {'domain': ['Person', 'Organization'], 'range': ['Text', 'Thing', 'URL'], 'datatype': ['Text', 'URL']}
 
     schema_org["types"]["MoveAction"]
-    # {'path': ['Thing', 'Action', 'MoveAction'], 'properties': ['fromLocation', 'toLocation'], 'children': ['ArriveAction', 'TravelAction', 'DepartAction']}
+    # {'ancestors': ['Thing', 'Action', 'MoveAction'], 'path': [...], 'properties': ['fromLocation', 'toLocation'], 'children': ['ArriveAction', 'TravelAction', 'DepartAction']}
 
     schema_org["types"]["Number"]
-    # {'path': ['DataType', 'Number'], 'properties': [], 'children': ['Integer', 'Float']}
+    # {'ancestors': ['rdfs:Class', 'DataType', 'Number'], 'path': [...], 'properties': [], 'children': ['Integer', 'Float']}
 
-    schema_org["types"]["Integer"]
-    # {'path': ['DataType', 'Number', 'Integer'], 'properties': []}
+    # Multiple inheritance is preserved: Diet is both a CreativeWork and a
+    # LifestyleModification, and reaches Thing through the former.
+    schema_org["types"]["Diet"]
+    # {'ancestors': ['Thing', 'CreativeWork', 'MedicalEntity', 'LifestyleModification', 'Diet'], ...}

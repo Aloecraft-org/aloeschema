@@ -21,7 +21,11 @@
 import unittest
 from copy import deepcopy
 
-from aloeschema import load_schema_org
+from aloeschema import (
+    load_schema_org,
+    registerCustomProperty,
+    registerCustomType,
+)
 from aloeschema.error import AloeSchemaError
 from aloeschema.validator import AloeSchemaValidator
 
@@ -195,6 +199,115 @@ class TestFuncs(unittest.TestCase):
                 quiet=True,
             )
         )
+
+
+class TestRegressions(unittest.TestCase):
+    """One test per defect fixed in stage 1 of the roadmap."""
+
+    def setUp(self):
+        self.schema = deepcopy(aloe_schema_org)
+
+    def test_registerCustomType_doesNotMutateParentAncestry(self):
+        before = list(self.schema["types"]["Person"]["ancestors"])
+        schema = registerCustomType(self.schema, name="User", parent="Person")
+        schema = registerCustomType(schema, name="Admin", parent="Person")
+
+        self.assertEqual(schema["types"]["Person"]["ancestors"], before)
+        self.assertEqual(schema["types"]["User"]["ancestors"], before + ["User"])
+        self.assertEqual(schema["types"]["Admin"]["ancestors"], before + ["Admin"])
+
+        validator = AloeSchemaValidator(schema)
+        # The parent is not a descendant of its own child, and siblings are
+        # unrelated to each other.
+        self.assertFalse(validator.TypeDescendantOf("User", "Person"))
+        self.assertTrue(validator.TypeDescendantOf("Person", "User"))
+        self.assertFalse(validator.TypeDescendantOf("User", "Admin"))
+
+    def test_registerCustomType_underLeafParent(self):
+        # Leaf types had no "children" key, so registering under one raised
+        # KeyError.
+        schema = registerCustomType(
+            self.schema, name="NightLocksmith", parent="Locksmith"
+        )
+        self.assertIn("NightLocksmith", schema["types"]["Locksmith"]["children"])
+        self.assertIn("Locksmith", schema["types"]["NightLocksmith"]["ancestors"])
+
+    def test_registerCustomType_hasNoMutableDefault(self):
+        self.assertNotIn([], registerCustomType.__defaults__ or ())
+
+    def test_registerCustomProperty_acceptsDataTypeRange(self):
+        # The range guard was inverted, so every value type was rejected.
+        schema = registerCustomType(self.schema, name="User", parent="Person")
+        schema = registerCustomProperty(
+            schema, name="userName", domain=["Person", "User"], range=["Text"]
+        )
+        self.assertEqual(schema["properties"]["userName"]["datatype"], ["Text"])
+        self.assertTrue(
+            AloeSchemaValidator(schema).Validate(
+                subject_type_name="User",
+                property_type_name="userName",
+                value_type_name="Text",
+            )
+        )
+
+    def test_customType_inheritsAncestorProperties(self):
+        schema = registerCustomType(self.schema, name="User", parent="Person")
+        self.assertTrue(
+            AloeSchemaValidator(schema).Validate(
+                subject_type_name="User",
+                property_type_name="knowsAbout",
+                object_type_name="Thing",
+            )
+        )
+
+    def test_multipleInheritanceIsPreserved(self):
+        validator = AloeSchemaValidator(self.schema)
+
+        # Diet declares both CreativeWork and LifestyleModification as parents.
+        self.assertTrue(validator.TypeDescendantOf("CreativeWork", "Diet"))
+        self.assertTrue(validator.TypeDescendantOf("LifestyleModification", "Diet"))
+        self.assertTrue(
+            validator.Validate(subject_type_name="Diet", property_type_name="author")
+        )
+
+        # TVSeason likewise.
+        self.assertTrue(validator.TypeDescendantOf("CreativeWork", "TVSeason"))
+        self.assertTrue(validator.TypeDescendantOf("CreativeWorkSeason", "TVSeason"))
+
+    def test_everySchemaOrgTypeReachesThingOrDataType(self):
+        # Following only the first parent detached 84 types from the hierarchy.
+        # Terms carrying an external prefix (dcat:, fibo:, ...) are roots of
+        # other vocabularies and legitimately have no schema.org ancestor.
+        orphans = [
+            name
+            for name, entry in self.schema["types"].items()
+            if ":" not in name
+            and "Thing" not in entry["ancestors"]
+            and "DataType" not in entry["ancestors"]
+        ]
+        self.assertEqual(orphans, [])
+
+    def test_errorIsCaughtByExceptHandler(self):
+        # AloeSchemaError extended BaseException, so it slipped past
+        # `except Exception:` in calling code.
+        self.assertTrue(issubclass(AloeSchemaError, Exception))
+        with self.assertRaises(Exception):
+            AloeSchemaValidator(self.schema).Validate(subject_type_name="Nope")
+
+    def test_validityChecksReturnBooleans(self):
+        validator = AloeSchemaValidator(self.schema)
+        for value in (
+            validator.IsValidType("Person"),
+            validator.IsValidType("B-a-n-a-n-a-s"),
+            validator.IsValidPropertyType("knowsAbout"),
+            validator.IsValidValueType("Integer"),
+        ):
+            self.assertIsInstance(value, bool)
+
+    def test_pathIsAnAliasOfAncestors(self):
+        entry = self.schema["types"]["MoveAction"]
+        self.assertEqual(entry["path"], entry["ancestors"])
+        self.assertEqual(entry["ancestors"], ["Thing", "Action", "MoveAction"])
 
 
 if __name__ == "__main__":

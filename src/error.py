@@ -21,7 +21,7 @@
 from aloeschema.constant import AloeSchemaErrorType
 
 
-class AloeSchemaError(BaseException):
+class AloeSchemaError(Exception):
     def __init__(self, error_type: AloeSchemaErrorType, message: str = None):
         self.error_type = error_type  # renamed for clarity
         self.message = message

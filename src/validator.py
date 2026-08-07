@@ -70,7 +70,9 @@ class AloeSchemaValidator:
 
     def IsEnumerationType(self, type_name: str, ignore_case=True) -> bool:
         t = self._getType(type_name, ignore_case)
-        return bool(t) and self._item_in("Enumeration", t.get("path", []), ignore_case)
+        return bool(t) and self._item_in(
+            "Enumeration", t.get("ancestors", []), ignore_case
+        )
 
     def IsValidEnumerationValue(self, value_name: str, ignore_case=True) -> bool:
         return self._getEnumerationValue(value_name, ignore_case) is not None
@@ -99,15 +101,16 @@ class AloeSchemaValidator:
         return stored_type == enum_type_name
 
     def IsValidType(self, type_name: str, ignore_case=True) -> bool:
-        return self._getType(type_name, ignore_case)
+        return self._getType(type_name, ignore_case) is not None
 
     def IsValidPropertyType(self, property_type_name: str, ignore_case=True) -> bool:
-        return self._getProperty(property_type_name, ignore_case)
+        return self._getProperty(property_type_name, ignore_case) is not None
 
     def IsValidValueType(self, value_type_name: str, ignore_case=True) -> bool:
-        return self.IsValidType(
-            value_type_name, ignore_case
-        ) and "DataType" in self._getType(value_type_name, ignore_case).get("path", [])
+        entry = self._getType(value_type_name, ignore_case)
+        return entry is not None and self._item_in(
+            "DataType", entry.get("ancestors", []), ignore_case
+        )
 
     def TypeDescendantOf(
         self, parent_type_name: str, child_type_name: str, ignore_case=True, quiet=False
@@ -130,7 +133,7 @@ class AloeSchemaValidator:
 
         return self._item_in(
             parent_type_name,
-            self._getType(child_type_name, ignore_case).get("path", []),
+            self._getType(child_type_name, ignore_case).get("ancestors", []),
             ignore_case,
         )
 
@@ -163,7 +166,9 @@ class AloeSchemaValidator:
                     self._getProperty(property_type_name, ignore_case).get("range", []),
                     ignore_case,
                 )
-                for ancestor in self._getType(object_type_name, ignore_case)["path"]
+                for ancestor in self._getType(object_type_name, ignore_case)[
+                    "ancestors"
+                ]
             ]
         )
 
@@ -198,7 +203,9 @@ class AloeSchemaValidator:
                     ),
                     ignore_case,
                 )
-                for ancestor in self._getType(subject_type_name, ignore_case)["path"]
+                for ancestor in self._getType(subject_type_name, ignore_case)[
+                    "ancestors"
+                ]
             ]
         )
 
