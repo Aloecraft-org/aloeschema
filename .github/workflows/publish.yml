@@ -103,6 +103,24 @@ jobs:
         # no-version-in-filenames rule.
         run: python -m build --outdir release_dist
 
+      - name: The built wheel actually works
+        # `pip install -e .` resolves aloeschema.data straight from src/, so
+        # the suite passes against the source tree even when the artifact is
+        # broken. That is how every wheel up to 0.3.1 shipped without the
+        # ontology. Install what we are about to publish, in a clean
+        # environment, and exercise the entry point through it.
+        run: |
+          python -m venv /tmp/smoke
+          /tmp/smoke/bin/pip install --quiet release_dist/*.whl
+          /tmp/smoke/bin/python - <<'SMOKE'
+          from aloeschema import load_schema_org
+          from aloeschema.data.release import SCHEMAORG_RELEASE
+          s = load_schema_org()
+          assert s["schemaorg_release"] == SCHEMAORG_RELEASE, s["schemaorg_release"]
+          assert len(s["types"]) > 900, len(s["types"])
+          print("wheel OK: schema.org", SCHEMAORG_RELEASE, "|", len(s["types"]), "types")
+          SMOKE
+
       - name: BUILDINFO.txt
         run: |
           SHA="${GITHUB_SHA}"

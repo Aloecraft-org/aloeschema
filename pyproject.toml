@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name="aloeschema"
-version = "0.3.1"
+version = "0.3.2"
 description="Aloeschema is a simple schema.org accessor and validator that allows custom types and properties"
 authors = [{email = "michael@aloecraft.org"}]
 maintainers = [{email = "michael@aloecraft.org"}]
@@ -35,4 +35,8 @@ testpaths = [
 
 [tool.setuptools]
 package-dir = { "aloeschema" = "src" }
-packages = ["aloeschema"]
+# Subpackages are NOT implied by listing the parent -- aloeschema.data was
+# missing from every wheel and sdist up to 0.3.1, so load_schema_org() raised
+# ModuleNotFoundError on any non-editable install. tests/test_packaging.py
+# fails if a package directory under src/ is missing from this list.
+packages = ["aloeschema", "aloeschema.data"]

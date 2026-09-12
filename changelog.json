@@ -1,8 +1,9 @@
 {
   "schema": 1,
   "repo": "Aloecraft-org/aloeschema",
-  "latest": "v0.3.1",
+  "latest": "v0.3.2",
   "mirror_tags": [
+    "v0.3.2",
     "v0.3.1",
     "v0.3.0",
     "v0.2.3",
@@ -11,6 +12,28 @@
     "v0.2.0"
   ],
   "releases": [
+    {
+      "version": "0.3.2",
+      "tag": "v0.3.2",
+      "date": "2026-09-12",
+      "status": "released",
+      "stable": true,
+      "mirror": true,
+      "schemaorg_release": "30.0",
+      "summary": "The first release whose wheel contains the schema.org data.\n\n`aloeschema.data` was missing from every wheel and sdist ever\npublished, so `load_schema_org()` raised `ModuleNotFoundError` on any\n`pip install` -- the first example in the README, broken since at\nleast 0.2.0. Anyone who hit it was not doing anything wrong.\n\nEditable installs were unaffected, which is why it went unnoticed:\n`pip install -e .` resolves the package straight from `src/`, so the\ntest suite passed against the source tree while the artifact it\nproduced did not work.\n",
+      "upgrading": null,
+      "latest": true,
+      "sections": {
+        "added": [
+          "The release pipeline installs the built wheel into a clean\nenvironment and calls `load_schema_org()` through it before\npublishing. Verified against the published 0.3.1 wheel, which it\nrejects.\n",
+          "`tests/test_packaging.py` fails when a package directory under\n`src/` is missing from the declared package list, catching the same\ndefect at test time.\n"
+        ],
+        "fixed": [
+          "`[tool.setuptools].packages` declares `aloeschema.data`. setuptools\ndoes not imply subpackages from their parent, and only the parent\nwas listed.\n"
+        ]
+      },
+      "notes_md": "## [0.3.2] - 2026-09-12\n\n`v0.3.2` &middot; schema.org `30.0`\n\nThe first release whose wheel contains the schema.org data.\n\n`aloeschema.data` was missing from every wheel and sdist ever\npublished, so `load_schema_org()` raised `ModuleNotFoundError` on any\n`pip install` -- the first example in the README, broken since at\nleast 0.2.0. Anyone who hit it was not doing anything wrong.\n\nEditable installs were unaffected, which is why it went unnoticed:\n`pip install -e .` resolves the package straight from `src/`, so the\ntest suite passed against the source tree while the artifact it\nproduced did not work.\n\n### Added\n\n- The release pipeline installs the built wheel into a clean\n  environment and calls `load_schema_org()` through it before\n  publishing. Verified against the published 0.3.1 wheel, which it\n  rejects.\n- `tests/test_packaging.py` fails when a package directory under\n  `src/` is missing from the declared package list, catching the same\n  defect at test time.\n\n### Fixed\n\n- `[tool.setuptools].packages` declares `aloeschema.data`. setuptools\n  does not imply subpackages from their parent, and only the parent\n  was listed.\n"
+    },
     {
       "version": "0.3.1",
       "tag": "v0.3.1",
@@ -21,7 +44,7 @@
       "schemaorg_release": "30.0",
       "summary": "A release-pipeline fix. No library code changed between 0.3.0 and\n0.3.1, and the vendored ontology is the same schema.org 30.0.\n\n0.3.0 is on GitHub but never reached PyPI, which is why PyPI skips\nfrom 0.2.3 to 0.3.1. Its upload was refused with `invalid-publisher`:\nPyPI's trusted publisher is a tuple of owner, repository, workflow\nfilename and environment, and the release workflow had been renamed\nfrom `publish.yml` to `release.yml`, which revoked the grant. Every\nother claim matched. Nothing was published, so no version was spent.\n",
       "upgrading": null,
-      "latest": true,
+      "latest": false,
       "sections": {
         "fixed": [
           "The release workflow is `publish.yml` again, the filename PyPI is\nconfigured for, and says at the top of the file that its name is\nload-bearing. The constraint was invisible, which is what made the\nrename look free.\n",

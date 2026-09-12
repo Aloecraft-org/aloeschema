@@ -13,6 +13,39 @@ that is, is RECORDED rather than encoded: every entry from 0.3.0 carries a
 a fingerprint of the graph, and `script/checks.py` fails the build when the
 two disagree. aloeschema's own version says nothing about schema.org's.
 
+## [0.3.2] - 2026-09-12
+
+`v0.3.2` &middot; schema.org `30.0`
+
+The first release whose wheel contains the schema.org data.
+
+`aloeschema.data` was missing from every wheel and sdist ever
+published, so `load_schema_org()` raised `ModuleNotFoundError` on any
+`pip install` -- the first example in the README, broken since at
+least 0.2.0. Anyone who hit it was not doing anything wrong.
+
+Editable installs were unaffected, which is why it went unnoticed:
+`pip install -e .` resolves the package straight from `src/`, so the
+test suite passed against the source tree while the artifact it
+produced did not work.
+
+### Added
+
+- The release pipeline installs the built wheel into a clean
+  environment and calls `load_schema_org()` through it before
+  publishing. Verified against the published 0.3.1 wheel, which it
+  rejects.
+- `tests/test_packaging.py` fails when a package directory under
+  `src/` is missing from the declared package list, catching the same
+  defect at test time.
+
+### Fixed
+
+- `[tool.setuptools].packages` declares `aloeschema.data`. setuptools
+  does not imply subpackages from their parent, and only the parent
+  was listed.
+
+
 ## [0.3.1] - 2026-09-12
 
 `v0.3.1` &middot; schema.org `30.0`
