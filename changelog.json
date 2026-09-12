@@ -1,8 +1,9 @@
 {
   "schema": 1,
   "repo": "Aloecraft-org/aloeschema",
-  "latest": "v0.2.3",
+  "latest": "v0.3.0",
   "mirror_tags": [
+    "v0.3.0",
     "v0.2.3",
     "v0.2.2",
     "v0.2.1",
@@ -12,14 +13,14 @@
     {
       "version": "0.3.0",
       "tag": "v0.3.0",
-      "date": null,
-      "status": "unreleased",
+      "date": "2026-09-12",
+      "status": "released",
       "stable": true,
-      "mirror": false,
+      "mirror": true,
       "schemaorg_release": "30.0",
       "summary": "The vendored schema.org snapshot is now a pinned, named, verifiable\nrelease. Before this, it was an unreproducible capture of\n`version/latest` taken partway through schema.org's 30.0 development\nwindow: it matched no published release, carried two synthetic root\nnodes present in no release at all, and nothing anywhere recorded\nwhich ontology it was.\n",
       "upgrading": null,
-      "latest": false,
+      "latest": true,
       "sections": {
         "added": [
           "`schemaorg_release` is recorded on every release from here on, in the\nchangelog entry and in `BUILDINFO.txt`, and `src/data/release.py`\ncarries it alongside a fingerprint of the ontology graph.\n",
@@ -33,7 +34,7 @@
           "Release tooling is the shared technoproj engine, and versions follow\nthe Aloecraft scheme in `doc/ALIGNMENT.md`.\n"
         ]
       },
-      "notes_md": "## [0.3.0] - unreleased\n\n`v0.3.0` &middot; schema.org `30.0`\n\nThe vendored schema.org snapshot is now a pinned, named, verifiable\nrelease. Before this, it was an unreproducible capture of\n`version/latest` taken partway through schema.org's 30.0 development\nwindow: it matched no published release, carried two synthetic root\nnodes present in no release at all, and nothing anywhere recorded\nwhich ontology it was.\n\n### Added\n\n- `schemaorg_release` is recorded on every release from here on, in the\n  changelog entry and in `BUILDINFO.txt`, and `src/data/release.py`\n  carries it alongside a fingerprint of the ontology graph.\n- `load_schema_org()` returns `schemaorg_release` in its result dict.\n- `script/vendor_schemaorg.py` regenerates the snapshot from a pinned\n  release, so it can be reproduced and verified rather than trusted.\n- `script/checks.py` fails the build when the snapshot, the recorded\n  release and the changelog entry disagree.\n\n### Changed\n\n- The vendored ontology is schema.org release 30.0. Relative to the\n  capture it replaces this adds 34 terms -- among them\n  `schema:Credential`, `schema:jobDuration` and the DE and IT nonprofit\n  enumerations -- and drops two synthetic root nodes that were never\n  part of schema.org. Net: one more type, eighteen more properties, one\n  fewer enumeration. More input validates than before, which is why\n  this is a minor rather than a patch.\n- `load_schema_org(fetch=True)` now warns with `SchemaOrgReleaseWarning`\n  when what it fetched is not the vendored release. schema.org publishes\n  no version marker inside the JSON-LD, so an unrecognised document\n  reports `schemaorg_release: None` rather than guessing.\n- Release tooling is the shared technoproj engine, and versions follow\n  the Aloecraft scheme in `doc/ALIGNMENT.md`.\n"
+      "notes_md": "## [0.3.0] - 2026-09-12\n\n`v0.3.0` &middot; schema.org `30.0`\n\nThe vendored schema.org snapshot is now a pinned, named, verifiable\nrelease. Before this, it was an unreproducible capture of\n`version/latest` taken partway through schema.org's 30.0 development\nwindow: it matched no published release, carried two synthetic root\nnodes present in no release at all, and nothing anywhere recorded\nwhich ontology it was.\n\n### Added\n\n- `schemaorg_release` is recorded on every release from here on, in the\n  changelog entry and in `BUILDINFO.txt`, and `src/data/release.py`\n  carries it alongside a fingerprint of the ontology graph.\n- `load_schema_org()` returns `schemaorg_release` in its result dict.\n- `script/vendor_schemaorg.py` regenerates the snapshot from a pinned\n  release, so it can be reproduced and verified rather than trusted.\n- `script/checks.py` fails the build when the snapshot, the recorded\n  release and the changelog entry disagree.\n\n### Changed\n\n- The vendored ontology is schema.org release 30.0. Relative to the\n  capture it replaces this adds 34 terms -- among them\n  `schema:Credential`, `schema:jobDuration` and the DE and IT nonprofit\n  enumerations -- and drops two synthetic root nodes that were never\n  part of schema.org. Net: one more type, eighteen more properties, one\n  fewer enumeration. More input validates than before, which is why\n  this is a minor rather than a patch.\n- `load_schema_org(fetch=True)` now warns with `SchemaOrgReleaseWarning`\n  when what it fetched is not the vendored release. schema.org publishes\n  no version marker inside the JSON-LD, so an unrecognised document\n  reports `schemaorg_release: None` rather than guessing.\n- Release tooling is the shared technoproj engine, and versions follow\n  the Aloecraft scheme in `doc/ALIGNMENT.md`.\n"
     },
     {
       "version": "0.2.3",
@@ -45,7 +46,7 @@
       "schemaorg_release": null,
       "summary": "Requires Python 3.11 or newer.\n",
       "upgrading": null,
-      "latest": true,
+      "latest": false,
       "sections": {},
       "notes_md": "## [0.2.3] - 2026-06-30\n\n`v0.2.3`\n\nRequires Python 3.11 or newer.\n"
     },

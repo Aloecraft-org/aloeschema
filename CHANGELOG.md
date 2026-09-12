@@ -13,7 +13,7 @@ that is, is RECORDED rather than encoded: every entry from 0.3.0 carries a
 a fingerprint of the graph, and `script/checks.py` fails the build when the
 two disagree. aloeschema's own version says nothing about schema.org's.
 
-## [0.3.0] - unreleased
+## [0.3.0] - 2026-09-12
 
 `v0.3.0` &middot; schema.org `30.0`
 

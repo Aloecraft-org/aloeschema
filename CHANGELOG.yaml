@@ -4,10 +4,11 @@ repo: Aloecraft-org/aloeschema
 releases:
   - version: "0.3.0"
     tag: v0.3.0
-    status: unreleased
+    date: "2026-09-12"
+    status: released
     stable: true
-    latest: false
-    mirror: false
+    latest: true
+    mirror: true
     schemaorg_release: "30.0"
     summary: |
       The vendored schema.org snapshot is now a pinned, named, verifiable
@@ -52,7 +53,6 @@ releases:
     date: "2026-06-30"
     status: released
     stable: true
-    latest: true
     mirror: true
     summary: |
       Requires Python 3.11 or newer.
