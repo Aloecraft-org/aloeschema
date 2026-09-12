@@ -1,5 +1,15 @@
 name: Release
 
+# THE FILENAME OF THIS FILE IS LOAD-BEARING. Do not rename it.
+#
+# PyPI's trusted publisher is a tuple -- owner, repository, workflow
+# FILENAME, environment -- so the name `publish.yml` is part of how this
+# repository proves its identity to PyPI, exactly as if it were a secret.
+# Renaming it revokes the grant: v0.3.0 was renamed to release.yml and its
+# upload failed with `invalid-publisher`, every claim matching but the
+# workflow_ref. Changing it again means editing the publisher on PyPI in
+# the same change, or the next release does not publish.
+#
 # A tag publishes to PyPI, and PyPI uploads are immutable -- a version number
 # spent on a bad build can be yanked but never reused. So everything below
 # runs before the upload, and the upload depends on all of it.
