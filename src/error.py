@@ -29,3 +29,13 @@ class AloeSchemaError(BaseException):
 
     def __str__(self):
         return f"{f'{self.message} ' if self.message else ''}(Error Code: {self.error_type})"
+
+
+class SchemaOrgReleaseWarning(UserWarning):
+    """The ontology in hand is not the release this package records.
+
+    Raised by `load_schema_org(fetch=True)` when the document fetched from
+    schema.org does not match the vendored snapshot. It is a warning rather
+    than an error because fetching newer terms is a legitimate thing to want;
+    what is not legitimate is not knowing which ontology you got.
+    """

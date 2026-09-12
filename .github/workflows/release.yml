@@ -1,0 +1,168 @@
+name: Release
+
+# A tag publishes to PyPI, and PyPI uploads are immutable -- a version number
+# spent on a bad build can be yanked but never reused. So everything below
+# runs before the upload, and the upload depends on all of it.
+on:
+  push:
+    # One `tags` list with a `!` negation -- never `tags` plus `tags-ignore`,
+    # which Actions rejects. An unparseable workflow does not run at all, so
+    # that spelling would switch publishing off rather than narrowing it.
+    # Order matters: the negation must follow the positive pattern.
+    tags:
+      - 'v*'
+      - '!v*-dev.*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  # Pinned, never `main`: a release pipeline that tracks a branch changes
+  # when nobody touched it.
+  TECHNOPROJ: git+https://github.com/Aloecraft-org/technoproj@v0.1.0
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: pip install -e .[test]
+      - run: pytest tests/
+
+  preflight:
+    needs: test
+    runs-on: ubuntu-latest
+    outputs:
+      prerelease: ${{ steps.gate.outputs.prerelease }}
+      version: ${{ steps.gate.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0          # REQUIRED: BUILDINFO's branch derivation
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e . "$TECHNOPROJ"
+
+      - name: version.mk has not drifted from the shared copy
+        run: technoproj check
+
+      - name: CHANGELOG.md and changelog.json match CHANGELOG.yaml
+        run: technoproj-changelog check
+
+      - name: The tree agrees with the newest entry
+        # Runs script/checks.py: the vendored schema.org snapshot, the
+        # release it records, and the changelog entry must all agree.
+        run: technoproj-changelog consistency
+
+      - name: The tag has a released changelog entry
+        id: gate
+        run: technoproj-changelog release-check --tag "${GITHUB_REF_NAME}" --publish >> "$GITHUB_OUTPUT"
+
+      - name: The tag matches the version in the tree
+        run: |
+          BUILT=$(python -c 'import tomllib;print(tomllib.load(open("pyproject.toml","rb"))["project"]["version"])')
+          if [ "v${BUILT}" != "${GITHUB_REF_NAME}" ]; then
+            echo "::error::tag ${GITHUB_REF_NAME} would publish ${BUILT} to PyPI" >&2
+            exit 1
+          fi
+          echo "tag ${GITHUB_REF_NAME} builds ${BUILT}"
+
+  build:
+    needs: preflight
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e . build "$TECHNOPROJ"
+
+      - name: Build the distributions
+        # Wheels and sdists keep their PEP 427 / PEP 625 filenames -- pip's
+        # resolver parses them, so they are the one carve-out from the
+        # no-version-in-filenames rule.
+        run: python -m build --outdir release_dist
+
+      - name: BUILDINFO.txt
+        run: |
+          SHA="${GITHUB_SHA}"
+          # github.ref is the tag on a tag push, so the branch has to be
+          # derived -- and needs the full history fetched above to be found.
+          BRANCH=$(git branch -r --contains "$SHA" --format='%(refname:lstrip=3)' \
+                   | grep -vx HEAD | head -1)
+          {
+            echo "tag: ${GITHUB_REF_NAME}"
+            echo "version: ${{ needs.preflight.outputs.version }}"
+            echo "pep440: $(python -c 'import tomllib;print(tomllib.load(open("pyproject.toml","rb"))["project"]["version"])')"
+            echo "commit: ${SHA}"
+            echo "branch: ${BRANCH:-(detached)}"
+            echo "built: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            # The compatibility fact a consumer actually checks, by name.
+            echo "schemaorg_release: $(python -c 'from aloeschema.data.release import SCHEMAORG_RELEASE;print(SCHEMAORG_RELEASE)')"
+          } > release_dist/BUILDINFO.txt
+          cat release_dist/BUILDINFO.txt
+
+      - name: SHA256SUMS.txt
+        # Generated last, so the glob does not include it. The name carries
+        # the extension: the release mirror looks for exactly this.
+        run: cd release_dist && sha256sum * > SHA256SUMS.txt && cat SHA256SUMS.txt
+
+      - name: Release notes from the changelog
+        run: technoproj-changelog render md --tag "${GITHUB_REF_NAME}" > NOTES.md
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release_dist
+          path: |
+            release_dist/
+            NOTES.md
+
+  release:
+    needs: [preflight, build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: release_dist
+      - name: Publish the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" \
+            --title "${GITHUB_REF_NAME}" \
+            --notes-file NOTES.md \
+            $([ "${{ needs.preflight.outputs.prerelease }}" = "true" ] && echo --prerelease) \
+            release_dist/*
+
+  publish:
+    needs: [build, release]
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/project/aloeschema/
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: release_dist
+      - name: Keep only the distributions
+        # BUILDINFO.txt and SHA256SUMS.txt are release assets, not PyPI ones.
+        run: |
+          mkdir -p dist
+          mv release_dist/*.whl release_dist/*.tar.gz dist/
+          ls -l dist
+      - uses: pypa/gh-action-pypi-publish@release/v1

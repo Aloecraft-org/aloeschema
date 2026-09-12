@@ -1,0 +1,93 @@
+schema: 1
+repo: Aloecraft-org/aloeschema
+
+releases:
+  - version: "0.3.0"
+    tag: v0.3.0
+    status: unreleased
+    stable: true
+    latest: false
+    mirror: false
+    schemaorg_release: "30.0"
+    summary: |
+      The vendored schema.org snapshot is now a pinned, named, verifiable
+      release. Before this, it was an unreproducible capture of
+      `version/latest` taken partway through schema.org's 30.0 development
+      window: it matched no published release, carried two synthetic root
+      nodes present in no release at all, and nothing anywhere recorded
+      which ontology it was.
+    added:
+      - |
+        `schemaorg_release` is recorded on every release from here on, in the
+        changelog entry and in `BUILDINFO.txt`, and `src/data/release.py`
+        carries it alongside a fingerprint of the ontology graph.
+      - |
+        `load_schema_org()` returns `schemaorg_release` in its result dict.
+      - |
+        `script/vendor_schemaorg.py` regenerates the snapshot from a pinned
+        release, so it can be reproduced and verified rather than trusted.
+      - |
+        `script/checks.py` fails the build when the snapshot, the recorded
+        release and the changelog entry disagree.
+    changed:
+      - |
+        The vendored ontology is schema.org release 30.0. Relative to the
+        capture it replaces this adds 34 terms -- among them
+        `schema:Credential`, `schema:jobDuration` and the DE and IT nonprofit
+        enumerations -- and drops two synthetic root nodes that were never
+        part of schema.org. Net: one more type, eighteen more properties, one
+        fewer enumeration. More input validates than before, which is why
+        this is a minor rather than a patch.
+      - |
+        `load_schema_org(fetch=True)` now warns with `SchemaOrgReleaseWarning`
+        when what it fetched is not the vendored release. schema.org publishes
+        no version marker inside the JSON-LD, so an unrecognised document
+        reports `schemaorg_release: None` rather than guessing.
+      - |
+        Release tooling is the shared technoproj engine, and versions follow
+        the Aloecraft scheme in `doc/ALIGNMENT.md`.
+
+  - version: "0.2.3"
+    tag: v0.2.3
+    date: "2026-06-30"
+    status: released
+    stable: true
+    latest: true
+    mirror: true
+    summary: |
+      Requires Python 3.11 or newer.
+
+  - version: "0.2.2"
+    tag: v0.2.2
+    date: "2026-06-30"
+    status: released
+    stable: true
+    mirror: true
+    summary: |
+      Tests moved to `tests/`, and README badges added.
+
+  - version: "0.2.1"
+    tag: v0.2.1
+    date: "2026-06-30"
+    status: released
+    stable: true
+    mirror: true
+    summary: |
+      Packaging fix; same tree as 0.2.0.
+
+  - version: "0.2.0"
+    tag: v0.2.0
+    date: "2026-06-30"
+    status: released
+    stable: true
+    mirror: true
+    summary: |
+      Enumeration support: `registerCustomEnumeration`,
+      `registerCustomEnumerationValue`, `IsEnumerationType` and
+      `EnumerationValueIsOfType`.
+
+      No `schemaorg_release` is recorded for this release or any before it.
+      The ontology these shipped was a capture of `version/latest` taken in
+      January 2026, between schema.org 29.3 and 30.0, and it corresponds to
+      no published release -- so there is no release to name. That is the
+      defect 0.3.0 fixes.

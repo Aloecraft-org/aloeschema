@@ -1,9 +1,29 @@
 {
   "TECHNO_VERSION": {
     "major": 0,
-    "minor": 2,
-    "patch": 3,
-    "build": 0
+    "minor": 3,
+    "patch": 0,
+    "pre": null
+  },
+  "TECHNO_CHANGELOG": {
+    "project": "aloeschema",
+    "intro_extra": "\naloeschema vendors a snapshot of the schema.org ontology. Which release\nthat is, is RECORDED rather than encoded: every entry from 0.3.0 carries a\n`schemaorg_release` field, `src/data/release.py` holds the same release and\na fingerprint of the graph, and `script/checks.py` fails the build when the\ntwo disagree. aloeschema's own version says nothing about schema.org's.\n",
+    "facts": [
+      {
+        "id": "schemaorg",
+        "keys": ["schemaorg_release"],
+        "fmt": "schema.org `{schemaorg_release}`"
+      }
+    ],
+    "tag_rule": "exact",
+    "emit_json": true,
+    "stamps": [
+      {
+        "file": "pyproject.toml",
+        "find": "^version\\s*=\\s*\"([^\"]+)\"",
+        "spelling": "pep440"
+      }
+    ]
   },
   "TECHNO_INIT_DIRS": [
     ".nogit",

@@ -18,7 +18,11 @@
 # specific language governing permissions and limitations
 # under the License
 
+import warnings
+
 import requests
+
+from aloeschema.error import SchemaOrgReleaseWarning
 
 SCHEMA_URL = "https://schema.org/version/latest/schemaorg-current-https.jsonld"
 
@@ -342,19 +346,48 @@ def registerCustomType(
 
 
 def load_schema_org(fetch=False):
-    data = {}
+    """Load schema.org, from the vendored snapshot or live from the web.
+
+    The returned dict carries `schemaorg_release`: the schema.org release
+    these terms come from. It is `None` only when `fetch=True` returned
+    something that is not the vendored release -- schema.org publishes no
+    version marker inside the JSON-LD, so there is nothing to read off an
+    unrecognised document, and a `SchemaOrgReleaseWarning` says so.
+    """
+    from aloeschema.data.release import SCHEMAORG_GRAPH_SHA256, SCHEMAORG_RELEASE
+
     if fetch:
         data = requests.get(SCHEMA_URL).json()
+        from aloeschema.data import graph_fingerprint
+
+        release = (
+            SCHEMAORG_RELEASE
+            if graph_fingerprint(data) == SCHEMAORG_GRAPH_SHA256
+            else None
+        )
+        if release is None:
+            warnings.warn(
+                f"{SCHEMA_URL} does not match the vendored schema.org "
+                f"{SCHEMAORG_RELEASE} snapshot, so schemaorg_release is None: "
+                f"schema.org publishes no version marker to read off an "
+                f"unrecognised document. Use fetch=False for the pinned "
+                f"release, or regenerate the snapshot with "
+                f"script/vendor_schemaorg.py.",
+                SchemaOrgReleaseWarning,
+                stacklevel=2,
+            )
     else:
         from aloeschema.data.schemaorg_current import schemaorg_current_jsonld
 
         data = schemaorg_current_jsonld
+        release = SCHEMAORG_RELEASE
 
     schema_graph = data["@graph"]
     schema_types = _extract_types(schema_graph)
     schema_properties = _extract_properties(schema_graph, schema_types)
     schema_enumerations = _extract_enumeration_values(schema_graph, schema_types)
     return {
+        "schemaorg_release": release,
         "graph": schema_graph,
         "types": schema_types,
         "properties": schema_properties,
