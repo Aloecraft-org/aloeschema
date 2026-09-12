@@ -2,7 +2,7 @@
   "TECHNO_VERSION": {
     "major": 0,
     "minor": 3,
-    "patch": 0,
+    "patch": 1,
     "pre": null
   },
   "TECHNO_CHANGELOG": {
@@ -11,7 +11,9 @@
     "facts": [
       {
         "id": "schemaorg",
-        "keys": ["schemaorg_release"],
+        "keys": [
+          "schemaorg_release"
+        ],
         "fmt": "schema.org `{schemaorg_release}`"
       }
     ],

@@ -13,6 +13,33 @@ that is, is RECORDED rather than encoded: every entry from 0.3.0 carries a
 a fingerprint of the graph, and `script/checks.py` fails the build when the
 two disagree. aloeschema's own version says nothing about schema.org's.
 
+## [0.3.1] - 2026-09-12
+
+`v0.3.1` &middot; schema.org `30.0`
+
+A release-pipeline fix. No library code changed between 0.3.0 and
+0.3.1, and the vendored ontology is the same schema.org 30.0.
+
+0.3.0 is on GitHub but never reached PyPI, which is why PyPI skips
+from 0.2.3 to 0.3.1. Its upload was refused with `invalid-publisher`:
+PyPI's trusted publisher is a tuple of owner, repository, workflow
+filename and environment, and the release workflow had been renamed
+from `publish.yml` to `release.yml`, which revoked the grant. Every
+other claim matched. Nothing was published, so no version was spent.
+
+### Fixed
+
+- The release workflow is `publish.yml` again, the filename PyPI is
+  configured for, and says at the top of the file that its name is
+  load-bearing. The constraint was invisible, which is what made the
+  rename look free.
+- `BUILDINFO.txt` records the default branch rather than whichever
+  branch sorts first alphabetically. A released commit is normally on
+  both `main` and the branch it was developed on, so 0.3.0 shipped
+  `branch: claude/charming-mayer-foqboi` despite being released from
+  `main`.
+
+
 ## [0.3.0] - 2026-09-12
 
 `v0.3.0` &middot; schema.org `30.0`

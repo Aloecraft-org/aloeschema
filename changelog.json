@@ -1,8 +1,9 @@
 {
   "schema": 1,
   "repo": "Aloecraft-org/aloeschema",
-  "latest": "v0.3.0",
+  "latest": "v0.3.1",
   "mirror_tags": [
+    "v0.3.1",
     "v0.3.0",
     "v0.2.3",
     "v0.2.2",
@@ -10,6 +11,25 @@
     "v0.2.0"
   ],
   "releases": [
+    {
+      "version": "0.3.1",
+      "tag": "v0.3.1",
+      "date": "2026-09-12",
+      "status": "released",
+      "stable": true,
+      "mirror": true,
+      "schemaorg_release": "30.0",
+      "summary": "A release-pipeline fix. No library code changed between 0.3.0 and\n0.3.1, and the vendored ontology is the same schema.org 30.0.\n\n0.3.0 is on GitHub but never reached PyPI, which is why PyPI skips\nfrom 0.2.3 to 0.3.1. Its upload was refused with `invalid-publisher`:\nPyPI's trusted publisher is a tuple of owner, repository, workflow\nfilename and environment, and the release workflow had been renamed\nfrom `publish.yml` to `release.yml`, which revoked the grant. Every\nother claim matched. Nothing was published, so no version was spent.\n",
+      "upgrading": null,
+      "latest": true,
+      "sections": {
+        "fixed": [
+          "The release workflow is `publish.yml` again, the filename PyPI is\nconfigured for, and says at the top of the file that its name is\nload-bearing. The constraint was invisible, which is what made the\nrename look free.\n",
+          "`BUILDINFO.txt` records the default branch rather than whichever\nbranch sorts first alphabetically. A released commit is normally on\nboth `main` and the branch it was developed on, so 0.3.0 shipped\n`branch: claude/charming-mayer-foqboi` despite being released from\n`main`.\n"
+        ]
+      },
+      "notes_md": "## [0.3.1] - 2026-09-12\n\n`v0.3.1` &middot; schema.org `30.0`\n\nA release-pipeline fix. No library code changed between 0.3.0 and\n0.3.1, and the vendored ontology is the same schema.org 30.0.\n\n0.3.0 is on GitHub but never reached PyPI, which is why PyPI skips\nfrom 0.2.3 to 0.3.1. Its upload was refused with `invalid-publisher`:\nPyPI's trusted publisher is a tuple of owner, repository, workflow\nfilename and environment, and the release workflow had been renamed\nfrom `publish.yml` to `release.yml`, which revoked the grant. Every\nother claim matched. Nothing was published, so no version was spent.\n\n### Fixed\n\n- The release workflow is `publish.yml` again, the filename PyPI is\n  configured for, and says at the top of the file that its name is\n  load-bearing. The constraint was invisible, which is what made the\n  rename look free.\n- `BUILDINFO.txt` records the default branch rather than whichever\n  branch sorts first alphabetically. A released commit is normally on\n  both `main` and the branch it was developed on, so 0.3.0 shipped\n  `branch: claude/charming-mayer-foqboi` despite being released from\n  `main`.\n"
+    },
     {
       "version": "0.3.0",
       "tag": "v0.3.0",
@@ -20,7 +40,7 @@
       "schemaorg_release": "30.0",
       "summary": "The vendored schema.org snapshot is now a pinned, named, verifiable\nrelease. Before this, it was an unreproducible capture of\n`version/latest` taken partway through schema.org's 30.0 development\nwindow: it matched no published release, carried two synthetic root\nnodes present in no release at all, and nothing anywhere recorded\nwhich ontology it was.\n",
       "upgrading": null,
-      "latest": true,
+      "latest": false,
       "sections": {
         "added": [
           "`schemaorg_release` is recorded on every release from here on, in the\nchangelog entry and in `BUILDINFO.txt`, and `src/data/release.py`\ncarries it alongside a fingerprint of the ontology graph.\n",

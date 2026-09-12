@@ -2,12 +2,42 @@ schema: 1
 repo: Aloecraft-org/aloeschema
 
 releases:
+  - version: "0.3.1"
+    tag: v0.3.1
+    date: "2026-09-12"
+    status: released
+    stable: true
+    latest: true
+    mirror: true
+    schemaorg_release: "30.0"
+    summary: |
+      A release-pipeline fix. No library code changed between 0.3.0 and
+      0.3.1, and the vendored ontology is the same schema.org 30.0.
+
+      0.3.0 is on GitHub but never reached PyPI, which is why PyPI skips
+      from 0.2.3 to 0.3.1. Its upload was refused with `invalid-publisher`:
+      PyPI's trusted publisher is a tuple of owner, repository, workflow
+      filename and environment, and the release workflow had been renamed
+      from `publish.yml` to `release.yml`, which revoked the grant. Every
+      other claim matched. Nothing was published, so no version was spent.
+    fixed:
+      - |
+        The release workflow is `publish.yml` again, the filename PyPI is
+        configured for, and says at the top of the file that its name is
+        load-bearing. The constraint was invisible, which is what made the
+        rename look free.
+      - |
+        `BUILDINFO.txt` records the default branch rather than whichever
+        branch sorts first alphabetically. A released commit is normally on
+        both `main` and the branch it was developed on, so 0.3.0 shipped
+        `branch: claude/charming-mayer-foqboi` despite being released from
+        `main`.
+
   - version: "0.3.0"
     tag: v0.3.0
     date: "2026-09-12"
     status: released
     stable: true
-    latest: true
     mirror: true
     schemaorg_release: "30.0"
     summary: |
