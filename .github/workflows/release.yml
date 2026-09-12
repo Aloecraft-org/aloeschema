@@ -98,8 +98,18 @@ jobs:
           SHA="${GITHUB_SHA}"
           # github.ref is the tag on a tag push, so the branch has to be
           # derived -- and needs the full history fetched above to be found.
-          BRANCH=$(git branch -r --contains "$SHA" --format='%(refname:lstrip=3)' \
-                   | grep -vx HEAD | head -1)
+          #
+          # A released commit is normally on the default branch AND on the
+          # branch it was developed on, and `head -1` picks whichever sorts
+          # first alphabetically. That is how v0.3.0 came to record a feature
+          # branch despite being released from main. Prefer the default
+          # branch when it contains the commit; fall back to the first other
+          # candidate for a build genuinely cut off a branch.
+          CANDIDATES=$(git branch -r --contains "$SHA" --format='%(refname:lstrip=3)' \
+                       | grep -vx HEAD)
+          DEFAULT="${{ github.event.repository.default_branch }}"
+          BRANCH=$(printf '%s\n' "$CANDIDATES" | grep -xF "$DEFAULT" \
+                   || printf '%s\n' "$CANDIDATES" | head -1)
           {
             echo "tag: ${GITHUB_REF_NAME}"
             echo "version: ${{ needs.preflight.outputs.version }}"
