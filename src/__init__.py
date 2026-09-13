@@ -217,9 +217,13 @@ def registerCustomProperty(
     schema_validator = AloeSchemaValidator(schema_org_dict)
 
     for range_item_type in range:
+        # Raise only when the range is neither, which is what the message
+        # says. `or` here rejected every datatype: IsValidValueType is a
+        # subset of IsValidType, so a valid `Text` range satisfied the
+        # second arm and raised.
         if not schema_validator.IsValidType(
             range_item_type
-        ) or schema_validator.IsValidValueType(range_item_type):
+        ) and not schema_validator.IsValidValueType(range_item_type):
             raise AloeSchemaError(
                 AloeSchemaErrorType.PROPERTY_RANGE_TYPE_NOT_RECOGNIZED,
                 f"Range type<{range_item_type}> not a recognized schema.org type or valueType",

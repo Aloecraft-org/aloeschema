@@ -1,8 +1,9 @@
 {
   "schema": 1,
   "repo": "Aloecraft-org/aloeschema",
-  "latest": "v0.3.2",
+  "latest": "v0.3.3",
   "mirror_tags": [
+    "v0.3.3",
     "v0.3.2",
     "v0.3.1",
     "v0.3.0",
@@ -13,6 +14,27 @@
   ],
   "releases": [
     {
+      "version": "0.3.3",
+      "tag": "v0.3.3",
+      "date": "2026-09-13",
+      "status": "released",
+      "stable": true,
+      "mirror": true,
+      "schemaorg_release": "30.0",
+      "summary": "`registerCustomProperty` accepts datatype ranges again.\n\nIt rejected every one of them -- `Text`, `Number`, `Boolean`, `Date`,\n`DateTime` -- with `PROPERTY_RANGE_TYPE_NOT_RECOGNIZED`, which is the\nsecond example in the README. Only class ranges worked. The bug dates\nfrom when enumeration support went in; it was invisible because no\ntest registered a property with a datatype range, and the README\nexample that does could not run at all until 0.3.2 shipped the data.\n",
+      "upgrading": null,
+      "latest": true,
+      "sections": {
+        "added": [
+          "`tests/test_readme.py` executes both README examples and covers\ndatatype ranges, class ranges and unknown ranges. Both bugs fixed\nin 0.3.2 and 0.3.3 were on that path and neither was covered.\n"
+        ],
+        "fixed": [
+          "The range guard raises only when the range is neither a valid type\nnor a valid value type, which is what its error message says. It\nused `or`, and because `IsValidValueType` is a subset of\n`IsValidType`, a valid `Text` range satisfied the second arm and\nraised. The code immediately below it records datatype ranges in\n`properties[name][\"datatype\"]`, which the guard made unreachable.\n"
+        ]
+      },
+      "notes_md": "## [0.3.3] - 2026-09-13\n\n`v0.3.3` &middot; schema.org `30.0`\n\n`registerCustomProperty` accepts datatype ranges again.\n\nIt rejected every one of them -- `Text`, `Number`, `Boolean`, `Date`,\n`DateTime` -- with `PROPERTY_RANGE_TYPE_NOT_RECOGNIZED`, which is the\nsecond example in the README. Only class ranges worked. The bug dates\nfrom when enumeration support went in; it was invisible because no\ntest registered a property with a datatype range, and the README\nexample that does could not run at all until 0.3.2 shipped the data.\n\n### Added\n\n- `tests/test_readme.py` executes both README examples and covers\n  datatype ranges, class ranges and unknown ranges. Both bugs fixed\n  in 0.3.2 and 0.3.3 were on that path and neither was covered.\n\n### Fixed\n\n- The range guard raises only when the range is neither a valid type\n  nor a valid value type, which is what its error message says. It\n  used `or`, and because `IsValidValueType` is a subset of\n  `IsValidType`, a valid `Text` range satisfied the second arm and\n  raised. The code immediately below it records datatype ranges in\n  `properties[name][\"datatype\"]`, which the guard made unreachable.\n"
+    },
+    {
       "version": "0.3.2",
       "tag": "v0.3.2",
       "date": "2026-09-12",
@@ -22,7 +44,7 @@
       "schemaorg_release": "30.0",
       "summary": "The first release whose wheel contains the schema.org data.\n\n`aloeschema.data` was missing from every wheel and sdist ever\npublished, so `load_schema_org()` raised `ModuleNotFoundError` on any\n`pip install` -- the first example in the README, broken since at\nleast 0.2.0. Anyone who hit it was not doing anything wrong.\n\nEditable installs were unaffected, which is why it went unnoticed:\n`pip install -e .` resolves the package straight from `src/`, so the\ntest suite passed against the source tree while the artifact it\nproduced did not work.\n",
       "upgrading": null,
-      "latest": true,
+      "latest": false,
       "sections": {
         "added": [
           "The release pipeline installs the built wheel into a clean\nenvironment and calls `load_schema_org()` through it before\npublishing. Verified against the published 0.3.1 wheel, which it\nrejects.\n",

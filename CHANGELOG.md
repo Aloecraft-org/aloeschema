@@ -13,6 +13,35 @@ that is, is RECORDED rather than encoded: every entry from 0.3.0 carries a
 a fingerprint of the graph, and `script/checks.py` fails the build when the
 two disagree. aloeschema's own version says nothing about schema.org's.
 
+## [0.3.3] - 2026-09-13
+
+`v0.3.3` &middot; schema.org `30.0`
+
+`registerCustomProperty` accepts datatype ranges again.
+
+It rejected every one of them -- `Text`, `Number`, `Boolean`, `Date`,
+`DateTime` -- with `PROPERTY_RANGE_TYPE_NOT_RECOGNIZED`, which is the
+second example in the README. Only class ranges worked. The bug dates
+from when enumeration support went in; it was invisible because no
+test registered a property with a datatype range, and the README
+example that does could not run at all until 0.3.2 shipped the data.
+
+### Added
+
+- `tests/test_readme.py` executes both README examples and covers
+  datatype ranges, class ranges and unknown ranges. Both bugs fixed
+  in 0.3.2 and 0.3.3 were on that path and neither was covered.
+
+### Fixed
+
+- The range guard raises only when the range is neither a valid type
+  nor a valid value type, which is what its error message says. It
+  used `or`, and because `IsValidValueType` is a subset of
+  `IsValidType`, a valid `Text` range satisfied the second arm and
+  raised. The code immediately below it records datatype ranges in
+  `properties[name]["datatype"]`, which the guard made unreachable.
+
+
 ## [0.3.2] - 2026-09-12
 
 `v0.3.2` &middot; schema.org `30.0`
